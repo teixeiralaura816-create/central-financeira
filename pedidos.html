@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Painel de Pedidos Açaí­stel</title>
+  <style>
+    :root{--bg:#2d014d;--card:#5f0099;--card2:#6f13ad;--gold:#ffd54a;--green:#10b461;--blue:#3aa1ff;--text:#fff;--muted:#ead9ff;--line:rgba(255,255,255,.14)}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial,sans-serif;background:linear-gradient(180deg,var(--bg),#23003d);color:var(--text)}
+    .page{max-width:1320px;margin:0 auto;padding:20px 16px 40px}
+    .title{font-size:34px;font-weight:800;margin:0 0 6px}
+    .sub{color:var(--muted);margin-bottom:18px}
+    .card{background:linear-gradient(180deg,var(--card),var(--card2));border-radius:24px;padding:18px;margin-bottom:18px;border:1px solid var(--line)}
+    .grid{display:grid;gap:12px}
+    .form-grid{grid-template-columns:1fr 1fr 1.1fr 1.1fr .8fr .8fr .9fr .9fr auto}
+    input,select,button,textarea{font:inherit;border:none;outline:none}
+    .field,.select,.textarea{width:100%;background:#fff;color:#2d014d;padding:14px;border-radius:14px}
+    .textarea{min-height:84px;resize:vertical}
+    .btn{background:var(--gold);color:#3d1f00;font-weight:700;padding:14px 16px;border-radius:14px;cursor:pointer}
+    .btn.secondary{background:#fff;color:#4b007d}
+    .btn.ghost{background:rgba(255,255,255,.12);color:#fff;border:1px solid var(--line)}
+    .summary{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}
+    .metric{background:rgba(255,255,255,.08);border:1px solid var(--line);border-radius:18px;padding:16px}
+    .metric .t{color:var(--muted);font-size:14px;margin-bottom:8px}.metric .v{font-size:28px;font-weight:800}
+    .filters{display:grid;grid-template-columns:2fr 1fr 1fr auto auto;gap:12px;margin-top:12px}
+    .table-head,.row{display:grid;grid-template-columns:1.1fr 1.7fr .8fr .8fr .8fr .8fr .9fr 1.2fr;gap:10px;align-items:center}
+    .table-head{padding:14px 16px;color:var(--muted);font-size:13px;font-weight:700;border-bottom:1px solid var(--line)}
+    .row{padding:16px;border-bottom:1px solid var(--line)}
+    .row:last-child{border-bottom:none}
+    .tag{display:inline-flex;align-items:center;justify-content:center;padding:7px 10px;border-radius:999px;font-size:12px;font-weight:700}
+    .pendente{background:rgba(255,255,255,.15);color:#fff}
+    .pago{background:rgba(16,180,97,.18);color:#8dffbe}
+    .preparando{background:rgba(58,161,255,.18);color:#a7d6ff}
+    .entregue{background:rgba(255,213,74,.16);color:#ffe58e}
+    .fiado{background:rgba(255,120,120,.16);color:#ffc1c1}
+    .delete{background:#ff5c5c !important;color:#fff !important}
+    .actions{display:flex;gap:6px;flex-wrap:wrap}
+    .a-btn{padding:9px 10px;border-radius:10px;background:#fff;color:#4b007d;font-weight:700;cursor:pointer}
+    .muted{color:var(--muted)}
+    .empty,.tip{padding:16px;color:var(--muted)}
+    .tip{padding-left:4px}
+    .helper{background:rgba(255,255,255,.08);border-radius:16px;padding:14px;border:1px solid var(--line)}
+    .helper strong{display:block;margin-bottom:8px}
+    .history-list{display:grid;gap:10px}
+    .history-item{display:flex;justify-content:space-between;gap:10px;align-items:center;background:rgba(255,255,255,.08);border:1px solid var(--line);padding:12px 14px;border-radius:16px}
+    .split{display:grid;grid-template-columns:1.3fr .9fr;gap:18px}
+    .list-mini{display:grid;gap:10px}
+    .mini{background:rgba(255,255,255,.08);border:1px solid var(--line);border-radius:16px;padding:12px 14px}
+    .mini b{display:block;margin-bottom:6px}
+    .mini.highlight-rank{border:1px solid rgba(255,213,74,.35);background:linear-gradient(180deg,rgba(255,213,74,.12),rgba(255,255,255,.08))}
+    .mini .line-2{margin-top:6px;color:var(--muted);font-size:14px}
+
+    @media (max-width:1100px){
+      .form-grid,.filters,.summary,.split{grid-template-columns:1fr 1fr}
+      .table-head{display:none}
+      .row{grid-template-columns:1fr;gap:8px}
+      .row>div{display:flex;justify-content:space-between;gap:8px}
+      .row>div::before{content:attr(data-label);color:var(--muted);font-size:13px;font-weight:700}
+    }
+    @media (max-width:700px){.form-grid,.filters,.summary,.split{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="title">Painel de Pedidos Açaí­stel</div>
+    <div class="sub">Pedidos por dia, clientes salvos com preenchimento automático, ranking mensal, busca por cliente e relatórios mensais de clientes e produtos.</div>
+
+    <div class="card">
+      <div class="grid form-grid">
+        <input id="cliente" class="field" placeholder="Cliente" list="clientesList" autocomplete="off">
+        <datalist id="clientesList"></datalist>
+        <input id="telefone" class="field" placeholder="Telefone" list="telefonesList" autocomplete="off">
+        <datalist id="telefonesList"></datalist>
+        <input id="codigos" class="field" placeholder="Códigos ex: 3x3 + 2x1 + 1x5">
+        <input id="pedido" class="field" placeholder="Descrição manual / complemento">
+        <input id="valor" class="field" type="number" step="0.01" placeholder="Valor produtos">
+        <input id="entrega" class="field" type="number" step="0.01" placeholder="Entrega">
+        <input id="dataLancamento" class="field" type="date" title="Data do pedido">
+        <select id="pagamento" class="select">
+          <option value="Pix">Pix</option>
+          <option value="Dinheiro">Dinheiro</option>
+          <option value="Cartão">Cartão</option>
+          <option value="Fiado">Fiado</option>
+        </select>
+        <button id="addBtn" class="btn">Adicionar pedido</button>
+      </div>
+
+      <div class="actions" style="margin-top:12px">
+        <button id="lerCodigosBtn" class="btn secondary">Ler códigos</button>
+        <button id="limparDataBtn" class="btn ghost">Mostrar todos os dias</button>
+        <button id="hojeBtn" class="btn ghost">Voltar para hoje</button>
+      </div>
+
+      <div class="tip">No segundo pedido, digite o telefone e o nome do cliente será preenchido automaticamente. O campo entrega fica separado do valor dos produtos para o caixa não misturar.</div>
+
+      <div id="helperBox" class="helper" style="margin-top:14px"></div>
+      <div class="actions" style="margin-top:10px">
+        <button id="atualizarCatalogoBtn" class="btn secondary" type="button">Atualizar catálogo do admin</button>
+        <span id="catalogoInfo" class="muted" style="align-self:center"></span>
+      </div>
+
+      <div class="filters">
+        <input id="searchInput" class="field" placeholder="Buscar por cliente, telefone ou pedido">
+        <select id="statusFilter" class="select">
+          <option value="todos">Todos os status</option>
+          <option value="Pendente">Pendente</option>
+          <option value="Pago">Pago</option>
+          <option value="Fiado">Fiado</option>
+        </select>
+        <input id="dateFilter" class="field" type="date">
+        <input id="reportMonth" class="field" type="month">
+        <button id="refreshBtn" class="btn secondary">Atualizar</button>
+      </div>
+    </div>
+
+    <div class="summary">
+      <div class="metric"><div class="t">Pedidos do dia</div><div id="mTotal" class="v">0</div></div>
+      <div class="metric"><div class="t">Pagos</div><div id="mPago" class="v">0</div></div>
+      <div class="metric"><div class="t">Fiado em aberto</div><div id="mEntregue" class="v">0</div></div>
+      <div class="metric"><div class="t">Produtos do dia</div><div id="mValor" class="v">R$ 0,00</div></div>
+      <div class="metric"><div class="t">Entregas do dia</div><div id="mEntrega" class="v">R$ 0,00</div></div>
+    </div>
+
+    <div class="card">
+      <div class="title" style="font-size:24px;margin-bottom:6px">Painel turbo do mês</div>
+      <div class="sub" style="margin-bottom:14px">Visão rápida de faturamento, meta, cliente VIP e lucro estimado.</div>
+      <div class="summary">
+        <div class="metric"><div class="t">Faturamento do período</div><div id="dashFaturamento" class="v">R$ 0,00</div></div>
+        <div class="metric"><div class="t">Ticket médio</div><div id="dashTicket" class="v">R$ 0,00</div></div>
+        <div class="metric"><div class="t">Cliente VIP</div><div id="dashVip" class="v" style="font-size:20px">-</div></div>
+        <div class="metric"><div class="t">Melhor dia</div><div id="dashMelhorDia" class="v" style="font-size:20px">-</div></div>
+        <div class="metric"><div class="t">Lucro estimado</div><div id="dashLucro" class="v">R$ 0,00</div></div>
+      </div>
+      <div id="dashMetaInfo" class="helper" style="margin-top:14px"></div>
+    </div>
+
+    <div class="split">
+      <div class="card" style="padding:0;overflow:hidden">
+        <div class="table-head">
+          <div>Cliente</div><div>Pedido</div><div>Produtos</div><div>Entrega</div><div>Total</div><div>Pagamento</div><div>Data</div><div>Ação</div>
+        </div>
+        <div id="lista"></div>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <div class="title" style="font-size:24px;margin-bottom:10px">Histórico por dia</div>
+          <div id="historicoDias" class="history-list"></div>
+        </div>
+
+        <div class="card">
+          <div class="title" style="font-size:24px;margin-bottom:10px">Relatório mensal de clientes</div>
+          <div class="grid" style="grid-template-columns:1.2fr auto;gap:10px;margin-bottom:12px">
+            <input id="clienteBuscaMes" class="field" placeholder="Buscar cliente do mês ex: Laura">
+            <button id="limparClienteBuscaBtn" class="btn secondary">Limpar busca</button>
+          </div>
+          <div id="clienteResumoMes" class="mini" style="display:none"></div>
+          <div id="clientesMes" class="list-mini"></div>
+        </div>
+
+        <div class="card">
+          <div class="title" style="font-size:24px;margin-bottom:10px">Produtos vendidos no mês</div>
+          <div id="produtosMes" class="list-mini"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, doc, updateDoc, serverTimestamp, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBu1hRG2tXqnpZC0aMwADIeHDI4CdOEDCc",
+  authDomain: "raspadinha-atualizada.firebaseapp.com",
+  projectId: "raspadinha-atualizada",
+  storageBucket: "raspadinha-atualizada.firebasestorage.app",
+  messagingSenderId: "287257624054",
+  appId: "1:287257624054:web:79639f835cff59bdb51bd7",
+  measurementId: "G-29CLHSR79B"
+};
+
+const DEFAULT_CATALOGO = [
+  {codigo:'1', nome:'Açaí­ 300ml', preco:14, keywords:'acai 300 300ml copo 300'},
+  {codigo:'2', nome:'Açaí­ 400ml', preco:16, keywords:'acai 400 400ml copo 400'},
+  {codigo:'3', nome:'Açaí­ 500ml', preco:18, keywords:'acai 500 500ml copo 500'},
+  {codigo:'4', nome:'Açaí­ 700ml', preco:26, keywords:'acai 700 700ml copo 700'},
+  {codigo:'5', nome:'Pastel', preco:10, keywords:'pastel'},
+  {codigo:'6', nome:'Refri lata', preco:5, keywords:'refri lata coca lata refrigerante lata'},
+  {codigo:'7', nome:'Refri litro', preco:10, keywords:'refri litro refrigerante 1l litro'},
+  {codigo:'8', nome:'Açaí­ garrafa 300ml', preco:14, keywords:'garrafa 300 acai garrafa 300ml'},
+  {codigo:'9', nome:'Açaí­ garrafa 500ml', preco:18, keywords:'garrafa 500 acai garrafa 500ml'},
+  {codigo:'10', nome:'Combo 500 + 300', preco:29, keywords:'combo 500 300 combo 500+300'},
+  {codigo:'11', nome:'Açaí­ 250ml', preco:12, keywords:'acai 250 250ml copo 250'}
+];
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const els = {
+  cliente: document.getElementById('cliente'),
+  clientesList: document.getElementById('clientesList'),
+  telefonesList: document.getElementById('telefonesList'),
+  telefone: document.getElementById('telefone'),
+  codigos: document.getElementById('codigos'),
+  pedido: document.getElementById('pedido'),
+  valor: document.getElementById('valor'),
+  entrega: document.getElementById('entrega'),
+  dataLancamento: document.getElementById('dataLancamento'),
+  pagamento: document.getElementById('pagamento'),
+  addBtn: document.getElementById('addBtn'),
+  lerCodigosBtn: document.getElementById('lerCodigosBtn'),
+  helperBox: document.getElementById('helperBox'),
+  atualizarCatalogoBtn: document.getElementById('atualizarCatalogoBtn'),
+  catalogoInfo: document.getElementById('catalogoInfo'),
+  searchInput: document.getElementById('searchInput'),
+  statusFilter: document.getElementById('statusFilter'),
+  dateFilter: document.getElementById('dateFilter'),
+  reportMonth: document.getElementById('reportMonth'),
+  refreshBtn: document.getElementById('refreshBtn'),
+  limparDataBtn: document.getElementById('limparDataBtn'),
+  hojeBtn: document.getElementById('hojeBtn'),
+  lista: document.getElementById('lista'),
+  historicoDias: document.getElementById('historicoDias'),
+  clientesMes: document.getElementById('clientesMes'),
+  clienteBuscaMes: document.getElementById('clienteBuscaMes'),
+  clienteResumoMes: document.getElementById('clienteResumoMes'),
+  limparClienteBuscaBtn: document.getElementById('limparClienteBuscaBtn'),
+  produtosMes: document.getElementById('produtosMes'),
+  mTotal: document.getElementById('mTotal'),
+  mPago: document.getElementById('mPago'),
+  mEntregue: document.getElementById('mEntregue'),
+  mValor: document.getElementById('mValor'),
+  mEntrega: document.getElementById('mEntrega'),
+  dashFaturamento: document.getElementById('dashFaturamento'),
+  dashTicket: document.getElementById('dashTicket'),
+  dashVip: document.getElementById('dashVip'),
+  dashMelhorDia: document.getElementById('dashMelhorDia'),
+  dashLucro: document.getElementById('dashLucro'),
+  dashMetaInfo: document.getElementById('dashMetaInfo'),
+};
+
+let pedidos = [];
+let clientesCadastrados = [];
+let clientesAutocomplete = [];
+let catalogo = DEFAULT_CATALOGO;
+let entregaPadrao = 0;
+let metaDiariaAdmin = 0;
+let margemEstimadaAdmin = 35;
+let catalogoAtualizadoEm = '';
+const ADMIN_LOCAL_KEY = 'acaiistel_admin_config_v1';
+
+function normalizePhone(v){ return String(v||'').replace(/\D/g,''); }
+function normalizeBusca(v){ return String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim(); }
+function br(v){ return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
+function hoje(){ return new Date().toLocaleDateString('pt-BR'); }
+function hora(){ return new Date().toLocaleTimeString('pt-BR'); }
+function hojeISO(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function mesAtual(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }
+function toISO(brDate){
+  if(!brDate || !brDate.includes('/')) return '';
+  const [dd,mm,yy]=brDate.split('/');
+  return `${yy}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}`;
+}
+function isoToBr(iso){
+  if(!iso || !iso.includes('-')) return '';
+  const [y,m,d]=iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+function tagClass(status){ return (status || 'pendente').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+function esc(t){ return String(t??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;'); }
+function monthOfIso(iso){ return String(iso || '').slice(0,7); }
+
+function clienteKey(nome, telefone){
+  const n = String(nome||'').trim() || 'Sem nome';
+  const t = normalizePhone(telefone);
+  return `${n}__${t}`;
+}
+function clienteLabel(nome, telefone){
+  const n = String(nome||'').trim() || 'Sem nome';
+  const t = normalizePhone(telefone);
+  return t ? `${n} • ${t}` : n;
+}
+
+function applyAdminConfig(cfg){
+  if(!cfg || typeof cfg !== 'object') return false;
+  if(Array.isArray(cfg.catalogo) && cfg.catalogo.length){
+    catalogo = cfg.catalogo.map(item => ({
+      codigo: String(item.codigo ?? '').trim(),
+      nome: String(item.nome ?? '').trim(),
+      preco: Number(item.preco || 0),
+      keywords: String(item.keywords ?? '').trim()
+    })).filter(x => x.codigo && x.nome);
+  }else{
+    catalogo = DEFAULT_CATALOGO;
+  }
+  entregaPadrao = Number(cfg.entregaPadrao || 0);
+  metaDiariaAdmin = Number(cfg.metaDiaria || 0);
+  margemEstimadaAdmin = Number(cfg.margemEstimada ?? 35);
+  catalogoAtualizadoEm = cfg.updatedAt || cfg.serverUpdatedAt?.toDate?.()?.toISOString?.() || '';
+  if(!(Number(els.entrega.value) > 0) && entregaPadrao > 0) els.entrega.value = String(entregaPadrao);
+  const when = catalogoAtualizadoEm ? new Date(catalogoAtualizadoEm).toLocaleString('pt-BR') : 'sem data';
+  if(els.catalogoInfo) els.catalogoInfo.textContent = `Itens: ${catalogo.length} • Entrega padrão: ${br(entregaPadrao)} • Margem: ${Number(margemEstimadaAdmin||0).toFixed(0)}% • Atualizado: ${when}`;
+  renderHelper();
+  return true;
+}
+function renderClienteDatalists(filtroNome = '', filtroTelefone = ''){
+  const fn = normalizeBusca(filtroNome);
+  const ft = normalizePhone(filtroTelefone);
+
+  let lista = clientesAutocomplete;
+  if(fn.length >= 3){
+    lista = lista.filter(c => normalizeBusca(c.nome).includes(fn));
+  }
+  if(ft.length >= 3){
+    lista = lista.filter(c => String(c.telefone || '').includes(ft));
+  }
+
+  els.clientesList.innerHTML = lista
+    .slice(0,80)
+    .map(c => `<option value="${esc(c.nome)}"></option>`)
+    .join('');
+
+  els.telefonesList.innerHTML = lista
+    .filter(c => c.telefone)
+    .slice(0,80)
+    .map(c => `<option value="${esc(c.telefone)}"></option>`)
+    .join('');
+}
+
+function updateClienteDatalists(){
+  const mapa = new Map();
+
+  // Puxa clientes jÃ¡ cadastrados na coleção clientes
+  clientesCadastrados.forEach(c => {
+    const nome = String(c.nome || c.cliente || '').trim();
+    const telefone = normalizePhone(c.telefone || c.whatsapp || c.celular || '');
+    if(!nome && !telefone) return;
+    const key = telefone || clienteKey(nome, telefone);
+    if(!mapa.has(key)) mapa.set(key, {nome, telefone, pedidos:0});
+  });
+
+  // Também puxa clientes que aparecem nos pedidos antigos
+  pedidos.forEach(p => {
+    const nome = String(p.cliente||p.nome||p.nomeCliente||p.customer||'').trim();
+    const telefone = normalizePhone(p.telefone||p.whatsapp||p.celular||p.phone||p.numero||'');
+    if(!nome && !telefone) return;
+    const key = telefone || clienteKey(nome, telefone);
+    if(!mapa.has(key)) mapa.set(key, {nome, telefone, pedidos:0});
+    const item = mapa.get(key);
+    if(!item.nome && nome) item.nome = nome;
+    if(!item.telefone && telefone) item.telefone = telefone;
+    item.pedidos++;
+  });
+
+  clientesAutocomplete = [...mapa.values()].sort((a,b)=> String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR'));
+  renderClienteDatalists();
+}
+function preencherPorCliente(){
+  const termo = normalizeBusca(els.cliente.value);
+  if(termo.length < 3) return;
+
+  const achado = clientesAutocomplete.find(c => {
+    const n = normalizeBusca(c.nome);
+    return n === termo || n.startsWith(termo) || n.includes(termo);
+  });
+
+  if(achado){
+    if(!els.telefone.value.trim()) els.telefone.value = normalizePhone(achado.telefone || '');
+    // Só completa o nome exato quando sair do campo ou quando o navegador selecionou a opção.
+    if(normalizeBusca(achado.nome) === termo) els.cliente.value = achado.nome || els.cliente.value;
+  }
+}
+
+async function loadConfig(showMessage = false){
+  let cfgCloud = null;
+  let cfgLocal = null;
+  try{
+    const snap = await getDoc(doc(db, 'configuracoes', 'painel_admin_v1'));
+    if(snap.exists()) cfgCloud = snap.data();
+  }catch(e){
+    console.error(e);
+  }
+  try{
+    cfgLocal = JSON.parse(localStorage.getItem(ADMIN_LOCAL_KEY) || 'null');
+  }catch(e){
+    console.error(e);
+  }
+
+  function timeOf(cfg){
+    if(!cfg) return 0;
+    const direct = Date.parse(String(cfg.updatedAt || ''));
+    if(Number.isFinite(direct)) return direct;
+    try{
+      const server = cfg.serverUpdatedAt?.toDate?.();
+      if(server) return server.getTime();
+    }catch(e){}
+    return 0;
+  }
+
+  function hasCatalog(cfg){
+    return !!(cfg && Array.isArray(cfg.catalogo) && cfg.catalogo.length);
+  }
+  let chosen = null;
+  if(hasCatalog(cfgCloud) && hasCatalog(cfgLocal)){
+    chosen = timeOf(cfgLocal) > timeOf(cfgCloud) ? cfgLocal : cfgCloud;
+  }else{
+    chosen = hasCatalog(cfgCloud) ? cfgCloud : (hasCatalog(cfgLocal) ? cfgLocal : null);
+  }
+  if(chosen){
+    applyAdminConfig(chosen);
+    try{ localStorage.setItem(ADMIN_LOCAL_KEY, JSON.stringify(chosen)); }catch(e){}
+  }else{
+    applyAdminConfig({catalogo: DEFAULT_CATALOGO, entregaPadrao: 0, metaDiaria: 350, margemEstimada: 35});
+  }
+  if(showMessage) alert('Catálogo e preços atualizados do painel administrativo.');
+}
+
+function syncAdminConfigFromLocalCache(){
+  try{
+    const localCfg = JSON.parse(localStorage.getItem(ADMIN_LOCAL_KEY) || 'null');
+    if(!localCfg) return;
+    const incoming = String(localCfg.updatedAt || '');
+    if(incoming && incoming !== String(catalogoAtualizadoEm || '')){
+      applyAdminConfig(localCfg);
+    }
+  }catch(e){
+    console.error(e);
+  }
+}
+function parseCodigos(str){
+  syncAdminConfigFromLocalCache();
+  const raw = String(str || '').trim();
+  if(!raw) return {linhas:[], texto:'', total:0};
+  const partes = raw.split(/[+,;\n]+/).map(s => s.trim()).filter(Boolean);
+  const linhas = [];
+  for(const parte of partes){
+    let m = parte.match(/^(\d+)\s*(?:x|\*)\s*(\d+)$/i);
+    let qtd = 1;
+    let codigo = '';
+    if(m){
+      qtd = Number(m[1]);
+      codigo = m[2];
+    }else{
+      m = parte.match(/^(\d+)$/);
+      if(m){ qtd = 1; codigo = m[1]; }
+    }
+    if(!codigo) continue;
+    const item = catalogo.find(c => String(c.codigo) === String(codigo));
+    if(!item) continue;
+    linhas.push({
+      codigo: String(codigo),
+      quantidade: qtd,
+      nome: item.nome,
+      valorUnitario: Number(item.preco || 0),
+      subtotal: qtd * Number(item.preco || 0)
+    });
+  }
+  const texto = linhas.map(l => `${l.quantidade}x ${l.nome}`).join(' + ');
+  const total = linhas.reduce((a,b)=>a+b.subtotal,0);
+  return {linhas,texto,total};
+}
+
+function fillByCodigos(){
+  const parsed = parseCodigos(els.codigos.value);
+  renderHelper(parsed);
+  if(parsed.linhas.length){
+    const atual = String(els.pedido.value || '').trim();
+    const anteriorAuto = String(els.pedido.dataset.autoTexto || '').trim();
+    if(!atual || atual === anteriorAuto){
+      els.pedido.value = parsed.texto;
+      els.pedido.dataset.autoTexto = parsed.texto;
+    }
+    els.valor.value = parsed.total.toFixed(2);
+    return;
+  }
+  if(!String(els.codigos.value || '').trim()){
+    if(String(els.pedido.value || '').trim() === String(els.pedido.dataset.autoTexto || '').trim()){
+      els.pedido.value = '';
+    }
+    els.pedido.dataset.autoTexto = '';
+    if(!String(els.valor.value || '').trim()) els.valor.value = '';
+  }
+}
+
+function renderHelper(parsed = parseCodigos(els.codigos.value)){
+  if(!parsed.linhas.length){
+    els.helperBox.innerHTML = `<strong>Leitor de códigos</strong><div>Use formatos como <b>3x3 + 2x1 + 1x5</b>. Os preços vêm do painel administrativo e a entrega fica separada.</div>`;
+    return;
+  }
+  els.helperBox.innerHTML = `<strong>Leitura atual</strong>${parsed.linhas.map(l => `<div>${l.quantidade}x código ${esc(l.codigo)} = ${esc(l.nome)} • ${br(l.subtotal)}</div>`).join('')}<div style="margin-top:8px"><b>Total produtos:</b> ${br(parsed.total)}</div>`;
+}
+
+async function carregar(){
+  els.lista.innerHTML = '<div class="empty">Carregando pedidos...</div>';
+  try{
+    try{
+      const snapClientes = await getDocs(collection(db,'clientes'));
+      clientesCadastrados = snapClientes.docs.map(d => ({id:d.id, ...d.data()})).filter(x => !x.deleted);
+    }catch(clienteErr){
+      console.warn('Coleção clientes indisponível. Usando clientes dos pedidos antigos.', clienteErr);
+      clientesCadastrados = [];
+    }
+
+    const snap = await getDocs(collection(db,'pedidos'));
+    pedidos = snap.docs.map(d => ({id:d.id, ...d.data()})).filter(x => !x.deleted);
+    pedidos.sort((a,b)=>{
+      const da = String(a.createdAt?.toDate?.()?.toISOString?.() || a.dataISO || toISO(a.data) || '');
+      const dbb = String(b.createdAt?.toDate?.()?.toISOString?.() || b.dataISO || toISO(b.data) || '');
+      return dbb.localeCompare(da);
+    });
+    updateClienteDatalists();
+    console.log('Pedidos carregados:', pedidos.length, 'Clientes cadastrados:', clientesCadastrados.length);
+    render();
+  }catch(e){
+    console.error(e);
+    els.lista.innerHTML = '<div class="empty">Erro ao carregar pedidos. Confira as regras do Firebase.</div>';
+  }
+}
+
+function preencherNomePorTelefone(){
+  const tel = normalizePhone(els.telefone.value);
+  if(tel.length < 3) return;
+
+  const achado = clientesAutocomplete.find(c => String(c.telefone || '').includes(tel));
+  if(achado && !els.cliente.value.trim()) els.cliente.value = achado.nome || '';
+}
+
+function pedidoDataIso(p){
+  return p.dataISO || toISO(p.data);
+}
+
+function dataBrFromIso(iso){
+  if(!iso || !iso.includes('-')) return hoje();
+  const [y,m,d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+function dataLancamentoIsoAtual(){
+  return els.dataLancamento.value || hojeISO();
+}
+
+function filtrados(){
+  const search = els.searchInput.value.trim().toLowerCase();
+  const st = els.statusFilter.value;
+  const dt = els.dateFilter.value;
+  return pedidos.filter(p => {
+    const sOk = !search || [p.cliente,p.telefone,p.pedido,p.codigos].join(' ').toLowerCase().includes(search);
+    const stOk = st === 'todos' || p.status === st;
+    const dOk = !dt || pedidoDataIso(p) === dt;
+    return sOk && stOk && dOk;
+  });
+}
+
+function valorProdutosPedido(p){ return Number(p.valorProdutos ?? p.valor ?? 0); }
+function valorEntregaPedido(p){ return Number(p.entrega ?? 0); }
+function totalPedido(p){ return valorProdutosPedido(p) + valorEntregaPedido(p); }
+
+function pagamentoLabel(p){
+  if((p.status === 'Fiado') || p.pagamento === 'Fiado'){
+    if(p.recebidoEmISO){
+      return `Fiado • recebido via ${p.pagamentoRecebido || 'Pix'}`
+    }
+    return 'Fiado em aberto';
+  }
+  return p.pagamento || '-';
+}
+function contaComoReceita(p){ return ['Pago','Preparando','Entregue'].includes(p.status); }
+
+function renderHistoricoDias(){
+  const mapa = {};
+  pedidos.forEach(p => {
+    const dt = pedidoDataIso(p);
+    if(!dt) return;
+    if(!mapa[dt]) mapa[dt] = {qtd:0, valor:0, entrega:0};
+    mapa[dt].qtd++;
+    if(contaComoReceita(p)){
+      mapa[dt].valor += valorProdutosPedido(p);
+      mapa[dt].entrega += valorEntregaPedido(p);
+    }
+  });
+  const datas = Object.keys(mapa).sort().reverse();
+  if(!datas.length){
+    els.historicoDias.innerHTML = '<div class="empty">Sem histórico.</div>';
+    return;
+  }
+  els.historicoDias.innerHTML = datas.slice(0,20).map(dt => `
+    <div class="history-item">
+      <div><strong>${esc(isoToBr(dt))}</strong><br><span class="muted">${mapa[dt].qtd} pedido(s)</span></div>
+      <div>${br(mapa[dt].valor)} + ${br(mapa[dt].entrega)} entrega</div>
+      <button class="a-btn ver-dia" data-data="${dt}">Ver dia</button>
+    </div>
+  `).join('');
+  document.querySelectorAll('.ver-dia').forEach(btn => btn.addEventListener('click', () => {
+    els.dateFilter.value = btn.dataset.data;
+    render();
+  }));
+}
+
+function getItensPedido(p){
+  if(Array.isArray(p.itensCodigo) && p.itensCodigo.length) return p.itensCodigo;
+  const parsed = parseCodigos(p.codigos || '');
+  return parsed.linhas;
+}
+
+
+function estoqueCandidates(nome){
+  const t = normalizeText(nome);
+  const out = [t];
+  if(t.includes('coca')) out.push('refri lata');
+  if(t.includes('refri lata')) out.push('coca lata');
+  if(t.includes('acai')) out.push(t.replace('acai','açai'));
+  if(t.includes('combo')) out.push('combo');
+  return [...new Set(out)];
+}
+
+async function baixarEstoquePorPedido(pedidoDocId, pedidoData){
+  const pedido = pedidoData || pedidos.find(x => x.id === pedidoDocId);
+  if(!pedido) return;
+  if(pedido.stockBaixado) return;
+  const itens = getItensPedido(pedido);
+  if(!itens.length) return;
+
+  const snap = await getDocs(collection(db,'estoque'));
+  const lista = snap.docs.map(d => ({id:d.id, ...d.data()})).filter(x => !x.deleted);
+  const naoEncontrados = [];
+  let baixados = 0;
+
+  for(const item of itens){
+    const qtd = Number(item.quantidade || 0);
+    if(!(qtd > 0)) continue;
+    const candidatos = estoqueCandidates(item.nome || '');
+    const match = lista.find(e => {
+      const nome = normalizeText(e.nome || '');
+      return candidatos.some(c => nome === c || nome.includes(c) || c.includes(nome));
+    });
+    if(!match){
+      naoEncontrados.push(`${item.quantidade}x ${item.nome}`);
+      continue;
+    }
+    const atual = Number(match.quantidade || 0);
+    await updateDoc(doc(db,'estoque',match.id), { quantidade: Math.max(0, atual - qtd) });
+    match.quantidade = Math.max(0, atual - qtd);
+    baixados += 1;
+  }
+
+  const payload = {
+    stockBaixado: naoEncontrados.length === 0,
+    stockBaixaParcial: baixados > 0 && naoEncontrados.length > 0,
+    stockNaoEncontrados: naoEncontrados,
+    stockBaixadoHora: hora(),
+    stockBaixadoDataISO: hojeISO(),
+    stockBaixadoData: hoje()
+  };
+  await updateDoc(doc(db,'pedidos',pedidoDocId), payload);
+  const local = pedidos.find(x => x.id === pedidoDocId);
+  if(local) Object.assign(local, payload);
+  if(naoEncontrados.length){
+    alert('Pedido salvo, mas alguns itens não foram baixados do estoque automaticamente: ' + naoEncontrados.join(', '));
+  }
+}
+
+function renderPainelTurboMensal(rows, clientes){
+  const faturamento = rows.reduce((a,b)=>a+totalPedido(b),0);
+  const ticket = rows.length ? faturamento / rows.length : 0;
+  const vip = clientes[0] || null;
+  const porDia = {};
+  rows.forEach(p => {
+    const dt = pedidoDataIso(p);
+    porDia[dt] = (porDia[dt] || 0) + totalPedido(p);
+  });
+  const melhorDia = Object.entries(porDia).sort((a,b)=>b[1]-a[1])[0] || null;
+  const lucroEstimado = faturamento * (Number(margemEstimadaAdmin || 0) / 100);
+  const diasComVenda = Object.keys(porDia).length;
+  const metaPeriodo = Number(metaDiariaAdmin || 0) * diasComVenda;
+  const perc = metaPeriodo > 0 ? (faturamento / metaPeriodo) * 100 : 0;
+
+  els.dashFaturamento.textContent = br(faturamento);
+  els.dashTicket.textContent = br(ticket);
+  els.dashVip.textContent = vip ? `${vip.nome}` : '-';
+  els.dashMelhorDia.textContent = melhorDia ? `${isoToBr(melhorDia[0])} • ${br(melhorDia[1])}` : '-';
+  els.dashLucro.textContent = br(lucroEstimado);
+  els.dashMetaInfo.innerHTML = vip
+    ? `<strong>Nível máximo ativado</strong><div>Cliente VIP: <b>${esc(vip.nome)}</b>${vip.telefone ? ` • ${esc(vip.telefone)}` : ''} • ${vip.pedidos} pedido(s) • ${br(vip.total + vip.entrega)}</div><div style="margin-top:8px">Meta do período: ${br(metaPeriodo)} • Atingido: ${metaPeriodo ? perc.toFixed(0) : 0}% • Margem estimada atual: ${Number(margemEstimadaAdmin||0).toFixed(0)}%.</div>`
+    : `<strong>Painel turbo</strong><div>Meta do período: ${br(metaPeriodo)} • Dias com venda: ${diasComVenda} • Margem estimada: ${Number(margemEstimadaAdmin||0).toFixed(0)}%.</div>`;
+}
+
+
+function renderRelatoriosMensais(){
+  const month = els.reportMonth.value || mesAtual();
+  const rows = pedidos.filter(p => monthOfIso(pedidoDataIso(p)) === month && contaComoReceita(p));
+
+  const byCliente = {};
+  rows.forEach(p => {
+    const key = clienteKey(p.cliente, p.telefone);
+    if(!byCliente[key]) byCliente[key] = {
+      nome: (p.cliente || 'Sem nome').trim() || 'Sem nome',
+      telefone: normalizePhone(p.telefone),
+      total:0,
+      entrega:0,
+      pedidos:0,
+      itens:[]
+    };
+    byCliente[key].total += valorProdutosPedido(p);
+    byCliente[key].entrega += valorEntregaPedido(p);
+    byCliente[key].pedidos++;
+    byCliente[key].itens.push({
+      data: p.data || isoToBr(pedidoDataIso(p)),
+      pedido: p.pedido || '-',
+      produtos: valorProdutosPedido(p),
+      entrega: valorEntregaPedido(p),
+      total: totalPedido(p)
+    });
+  });
+
+  const clientes = Object.values(byCliente).sort((a,b)=>(b.total + b.entrega) - (a.total + a.entrega));
+  renderPainelTurboMensal(rows, clientes);
+  els.clientesMes.innerHTML = clientes.length ? clientes.map((info, idx) => `
+    <div class="mini ${idx < 3 ? 'highlight-rank' : ''}">
+      <b>${idx+1} • ${esc(info.nome)}</b>
+      <div>${info.telefone ? esc(info.telefone) + ' • ' : ''}${info.pedidos} pedido(s)</div>
+      <div class="line-2">Produtos no mês: ${br(info.total)} • Entregas: ${br(info.entrega)}</div>
+      <div class="line-2">Total geral: ${br(info.total + info.entrega)}</div>
+    </div>
+  `).join('') : '<div class="empty">Sem compras no mês selecionado.</div>';
+
+  const termo = (els.clienteBuscaMes.value || '').trim().toLowerCase();
+  if(termo){
+    const achado = clientes.find(c => `${c.nome} ${c.telefone}`.toLowerCase().includes(termo));
+    if(achado){
+      els.clienteResumoMes.style.display = 'block';
+      els.clienteResumoMes.innerHTML = `
+        <b>Resumo de ${esc(achado.nome)}</b>
+        <div>${achado.telefone ? 'Telefone: ' + esc(achado.telefone) + '<br>' : ''}Pedidos no mês: ${achado.pedidos}</div>
+        <div class="line-2">Produtos: ${br(achado.total)} • Entregas: ${br(achado.entrega)} • Total: ${br(achado.total + achado.entrega)}</div>
+        <div class="line-2" style="margin-top:10px">${achado.itens.slice(0,12).map(i => `${esc(i.data)} • ${esc(i.pedido)} • ${br(i.total)}`).join('<br>') || 'Sem itens'}</div>
+      `;
+    }else{
+      els.clienteResumoMes.style.display = 'block';
+      els.clienteResumoMes.innerHTML = '<b>Nenhum cliente encontrado</b><div class="line-2">Tente buscar por nome ou telefone.</div>';
+    }
+  }else{
+    els.clienteResumoMes.style.display = 'none';
+    els.clienteResumoMes.innerHTML = '';
+  }
+
+  const byProduto = {};
+  rows.forEach(p => {
+    getItensPedido(p).forEach(item => {
+      const nome = item.nome || 'Item';
+      if(!byProduto[nome]) byProduto[nome] = {qtd:0, valor:0};
+      byProduto[nome].qtd += Number(item.quantidade || 0);
+      byProduto[nome].valor += Number(item.subtotal || (item.quantidade||0)*(item.valorUnitario||0) || 0);
+    });
+  });
+  const produtos = Object.entries(byProduto).sort((a,b)=>b[1].qtd - a[1].qtd);
+  els.produtosMes.innerHTML = produtos.length ? produtos.map(([nome,info]) => `
+    <div class="mini">
+      <b>${esc(nome)}</b>
+      <div>Quantidade no mês: ${info.qtd}</div>
+      <div>Valor vendido: ${br(info.valor)}</div>
+    </div>
+  `).join('') : '<div class="empty">Sem produtos com código no mês selecionado.</div>';
+}
+
+function render(){
+  const rows = filtrados();
+  const hojeIso = dataLancamentoIsoAtual();
+  const diaRows = pedidos.filter(p => pedidoDataIso(p) === hojeIso);
+  els.mTotal.textContent = diaRows.length;
+  els.mPago.textContent = diaRows.filter(p => p.status === 'Pago').length;
+  els.mEntregue.textContent = diaRows.filter(p => p.status === 'Fiado').length;
+  els.mValor.textContent = br(diaRows.filter(contaComoReceita).reduce((a,b)=>a+valorProdutosPedido(b),0));
+  els.mEntrega.textContent = br(diaRows.filter(contaComoReceita).reduce((a,b)=>a+valorEntregaPedido(b),0));
+
+  if(!rows.length){
+    els.lista.innerHTML = '<div class="empty">Nenhum pedido encontrado.</div>';
+  }else{
+    els.lista.innerHTML = rows.map(p => `
+      <div class="row">
+        <div data-label="Cliente"><div><strong>${esc(p.cliente)}</strong><br><span class="muted">${esc(p.telefone||'')}</span></div></div>
+        <div data-label="Pedido"><div>${esc(p.pedido || '-')}<br><span class="muted">${esc(p.codigos || '')}</span></div></div>
+        <div data-label="Produtos"><div>${br(valorProdutosPedido(p))}</div></div>
+        <div data-label="Entrega"><div>${br(valorEntregaPedido(p))}</div></div>
+        <div data-label="Total"><div>${br(totalPedido(p))}</div></div>
+        <div data-label="Pagamento"><div>${esc(pagamentoLabel(p))}</div></div>
+        <div data-label="Data"><div>${esc(p.data||'-')}<br><span class="muted">${esc(p.hora||'')}</span></div></div>
+        <div data-label="Ação">
+          <div class="actions">
+            <span class="tag ${tagClass(p.status)}">${esc(p.status||'Pendente')}</span>
+            ${p.status === 'Fiado' ? `<button class="a-btn receber-fiado" data-id="${p.id}">Receber</button>` : ''}
+            <button class="a-btn" data-id="${p.id}" data-status="Pago">Pago</button>
+            <button class="a-btn delete excluir-pedido" data-id="${p.id}">Excluir</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  document.querySelectorAll('.a-btn[data-id][data-status]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      try{
+        await updateDoc(doc(db,'pedidos', btn.dataset.id), { status: btn.dataset.status });
+        const item = pedidos.find(x => x.id === btn.dataset.id);
+        if(item) item.status = btn.dataset.status;
+        if(btn.dataset.status === 'Pago' && item && !item.stockBaixado){ await baixarEstoquePorPedido(btn.dataset.id, item); }
+        render();
+      }catch(e){
+        console.error(e);
+        alert('Não foi possível atualizar o status.');
+        btn.disabled = false;
+      }
+    });
+  });
+
+  document.querySelectorAll('.receber-fiado').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const forma = prompt('Recebido no fiado. Qual forma de pagamento?\nDigite: Pix, Dinheiro ou Cartão', 'Pix');
+      if(forma === null) return;
+      const pagamentoRecebido = String(forma || '').trim();
+      if(!pagamentoRecebido) return alert('Informe a forma de pagamento.');
+      btn.disabled = true;
+      try{
+        const payload = {
+          status: 'Pago',
+          pagamentoRecebido,
+          recebidoEm: hoje(),
+          recebidoEmISO: hojeISO(),
+          horaRecebimento: hora(),
+          totalRecebido: 0
+        };
+        await updateDoc(doc(db,'pedidos', btn.dataset.id), payload);
+        const item = pedidos.find(x => x.id === btn.dataset.id);
+        if(item) Object.assign(item, payload);
+        if(item && !item.stockBaixado){ await baixarEstoquePorPedido(btn.dataset.id, item); }
+        render();
+        try{
+          await baixarEstoquePorPedido(btn.dataset.id);
+        }catch(stockErr){
+          console.error(stockErr);
+        }
+        alert('Fiado recebido com sucesso. Ele vai entrar no caixa do dia do recebimento.');
+      }catch(e){
+        console.error(e);
+        alert('Não foi possível receber o fiado.');
+        btn.disabled = false;
+      }
+    });
+  });
+
+  document.querySelectorAll('.excluir-pedido').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if(!confirm('Excluir este pedido?')) return;
+      btn.disabled = true;
+      try{
+        await updateDoc(doc(db,'pedidos', btn.dataset.id), { deleted: true, deletedAt: serverTimestamp() });
+        pedidos = pedidos.filter(x => x.id !== btn.dataset.id);
+        updateClienteDatalists();
+        render();
+      }catch(e){
+        console.error(e);
+        alert('Não foi possível excluir o pedido.');
+        btn.disabled = false;
+      }
+    });
+  });
+
+  renderHistoricoDias();
+  renderRelatoriosMensais();
+}
+
+els.cliente.addEventListener('input', () => {
+  renderClienteDatalists(els.cliente.value, '');
+  if(normalizeBusca(els.cliente.value).length >= 3) preencherPorCliente();
+});
+els.telefone.addEventListener('input', () => {
+  renderClienteDatalists('', els.telefone.value);
+  preencherNomePorTelefone();
+});
+els.telefone.addEventListener('blur', preencherNomePorTelefone);
+els.cliente.addEventListener('change', preencherPorCliente);
+els.cliente.addEventListener('blur', preencherPorCliente);
+els.codigos.addEventListener('input', fillByCodigos);
+els.atualizarCatalogoBtn?.addEventListener('click', () => loadConfig(true));
+window.addEventListener('focus', () => loadConfig(false));
+window.addEventListener('storage', (e) => { if(e.key === ADMIN_LOCAL_KEY) syncAdminConfigFromLocalCache(); });
+els.lerCodigosBtn.addEventListener('click', fillByCodigos);
+
+els.addBtn.addEventListener('click', async () => {
+  await loadConfig(false);
+  const cliente = els.cliente.value.trim();
+  const telefone = els.telefone.value.trim();
+  let pedido = els.pedido.value.trim();
+  const codigos = els.codigos.value.trim();
+  let valorProdutos = Number(els.valor.value || 0);
+  const entrega = Number(els.entrega.value || 0);
+  const pagamento = els.pagamento.value;
+  const parsed = parseCodigos(codigos);
+
+  if(!pedido && parsed.texto) pedido = parsed.texto;
+  if(!(valorProdutos > 0) && parsed.total > 0) valorProdutos = parsed.total;
+
+  if(!cliente || !pedido || !(valorProdutos > 0)){
+    alert('Preencha cliente, pedido e valor dos produtos.');
+    return;
+  }
+
+  els.addBtn.disabled = true;
+  try{
+    const ehFiado = pagamento === 'Fiado';
+    const telefoneKey = normalizePhone(telefone);
+
+    const ref = await addDoc(collection(db,'pedidos'), {
+      cliente, telefone, pedido, codigos,
+      valor: valorProdutos,
+      valorProdutos,
+      entrega,
+      totalRecebido: ehFiado ? 0 : (valorProdutos + entrega),
+      itensCodigo: parsed.linhas,
+      pagamento,
+      pagamentoRecebido: ehFiado ? '' : pagamento,
+      status: ehFiado ? 'Fiado' : 'Pago',
+      fiado: ehFiado,
+      recebidoEm: ehFiado ? '' : hoje(),
+      recebidoEmISO: ehFiado ? '' : hojeISO(),
+      horaRecebimento: ehFiado ? '' : hora(),
+      data: dataBrFromIso(dataLancamentoIsoAtual()),
+      dataISO: dataLancamentoIsoAtual(),
+      hora: hora(),
+      stockBaixado: false,
+      lancadoCaixa: false,
+      createdAt: serverTimestamp()
+    });
+
+    try{
+      if(telefoneKey || cliente){
+        const clienteId = telefoneKey || cliente.toLowerCase().replace(/[^a-z0-9]+/gi,'_');
+        await setDoc(doc(db,'clientes', clienteId), {
+          nome: cliente,
+          cliente,
+          telefone: telefoneKey,
+          ultimaCompra: dataLancamentoIsoAtual(),
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+      }
+    }catch(clienteSaveErr){
+      console.warn('Pedido salvo, mas cadastro separado de cliente não foi atualizado.', clienteSaveErr);
+    }
+
+    if(!ehFiado){
+      try{
+        await baixarEstoquePorPedido(ref.id, { cliente, telefone, pedido, codigos, itensCodigo: parsed.linhas, status:'Pago' });
+      }catch(stockErr){
+        console.error(stockErr);
+        alert('Pedido salvo, mas a baixa automática do estoque falhou. Você pode corrigir isso no estoque sem perder o pedido.');
+      }
+    }
+    els.cliente.value = '';
+    els.telefone.value = '';
+    els.codigos.value = '';
+    els.pedido.value = '';
+    els.valor.value = '';
+    els.entrega.value = entregaPadrao > 0 ? String(entregaPadrao) : '';
+    renderHelper();
+    await carregar();
+  }catch(e){
+    console.error(e);
+    alert('Não foi possível salvar o pedido. Se os preços estiverem certos no admin, o erro pode ser de conexão com o Firebase.');
+  }finally{
+    els.addBtn.disabled = false;
+  }
+});
+
+[els.searchInput, els.statusFilter, els.dateFilter, els.reportMonth, els.clienteBuscaMes].forEach(el => {
+  el.addEventListener('input', render);
+  el.addEventListener('change', render);
+});
+els.refreshBtn.addEventListener('click', carregar);
+els.limparClienteBuscaBtn.addEventListener('click', () => { els.clienteBuscaMes.value=''; render(); });
+els.limparDataBtn.addEventListener('click', () => { els.dateFilter.value = ''; render(); });
+els.hojeBtn.addEventListener('click', () => { els.dateFilter.value = hojeISO(); els.dataLancamento.value = hojeISO(); render(); });
+
+els.dateFilter.value = hojeISO();
+els.dataLancamento.value = hojeISO();
+els.reportMonth.value = mesAtual();
+await loadConfig(false);
+carregar();
+</script>
+</body>
+</html>
+
+
+
+

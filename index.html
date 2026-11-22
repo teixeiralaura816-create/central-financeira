@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Açaistel • App Integrado Avançado</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#4b007d">
+  <style>
+    :root{--bg:#2b0148;--bg2:#4b007d;--card:#5f0099;--gold:#ffd54a;--text:#fff;--muted:#ead9ff;--line:rgba(255,255,255,.14)}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;font-family:system-ui,-apple-system,sans-serif;color:var(--text);background:linear-gradient(180deg,var(--bg),#210038)}
+    .wrap{max-width:600px;margin:0 auto;min-height:100vh;padding:24px 16px 40px;display:flex;flex-direction:column}
+    .hero{padding:16px 8px 12px;text-align:center}
+    .hero h1{margin:0;font-size:44px;font-weight:900;letter-spacing:-0.03em}
+    .hero h1 span{color:var(--gold)}
+    .hero p{margin:10px 0 0;color:var(--muted);line-height:1.45;font-size:16px}
+    .stack{margin-top:20px;display:grid;gap:16px}
+    .card{display:block;text-decoration:none;color:inherit;background:linear-gradient(180deg,var(--card),#6d12ad);border:1px solid var(--line);border-radius:24px;padding:20px;box-shadow:0 16px 40px rgba(0,0,0,.24);transition:transform .2s,filter .2s}
+    .card:hover{transform:translateY(-2px);filter:brightness(1.05)}
+    .card.highlight{background:linear-gradient(135deg,#5f0099,#8a12e2);border:1px solid var(--gold);box-shadow:0 20px 50px rgba(255,213,74,.2)}
+    .icon{font-size:36px;margin-bottom:10px}
+    .title{font-size:24px;font-weight:900;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between}
+    .desc{color:var(--muted);font-size:15px;line-height:1.45}
+    .badge{display:inline-block;margin-top:14px;padding:6px 14px;border-radius:999px;background:rgba(255,213,74,.15);border:1px solid rgba(255,213,74,.3);color:var(--gold);font-weight:700;font-size:13px}
+    .footer{margin-top:auto;padding-top:24px;text-align:center;color:var(--muted);font-size:13px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <h1><span>Aça</span>istel</h1>
+      <p>Ecossistema integrado com Central Financeira, Caixa Diário, Pedidos, Estoque e Gestão Avançada.</p>
+    </div>
+
+    <div class="stack">
+      <a class="card highlight" href="central-financeira-corrigida.html">
+        <div class="icon">🛡️</div>
+        <div class="title">Central Financeira</div>
+        <div class="desc">Interface principal ERP V5: Dashboard executivo, radar de sobrevivência, projeções preditivas e simulador financeiro.</div>
+        <div class="badge" style="background:rgba(255,213,74,.25);color:var(--gold)">Gestão Executiva V5</div>
+      </a>
+
+      <a class="card" href="caixa_corrigido.html">
+        <div class="icon">💰</div>
+        <div class="title">Caixa diário</div>
+        <div class="desc">Fechamento completo com separação empresa x dono, metas, alertas, ciclo mensal e o novo Açaí de 1 Litro.</div>
+        <div class="badge">Financeiro</div>
+      </a>
+
+      <a class="card" href="pedidos.html">
+        <div class="icon">🛵</div>
+        <div class="title">Painel de pedidos</div>
+        <div class="desc">Pedidos por dia, entrega separada, códigos rápidos e relatórios mensais.</div>
+        <div class="badge">Operação</div>
+      </a>
+
+      <a class="card" href="controle.html">
+        <div class="icon">🧠</div>
+        <div class="title">Central de controle</div>
+        <div class="desc">Painel executivo rápido para ver situação do negócio e compras da semana sem mexer no caixa.</div>
+        <div class="badge">Gestão</div>
+      </a>
+
+      <a class="card" href="estoque.html">
+        <div class="icon">📦</div>
+        <div class="title">Estoque</div>
+        <div class="desc">Controle detalhado e integrado com o painel de pedidos e suprimentos.</div>
+        <div class="badge">Suprimentos</div>
+      </a>
+
+      <a class="card" href="compras.html">
+        <div class="icon">🛒</div>
+        <div class="title">Compras inteligentes</div>
+        <div class="desc">Planilha automática da semana com compra sugerida de açaí, embalagens e reposições.</div>
+        <div class="badge">Gestão</div>
+      </a>
+
+      <a class="card" href="relatorios.html">
+        <div class="icon">📊</div>
+        <div class="title">Relatórios</div>
+        <div class="desc">Ranking de clientes, produtos vendidos, histórico por cliente e PDF mensal.</div>
+        <div class="badge">Gestão</div>
+      </a>
+
+      <a class="card" href="admin.html">
+        <div class="icon">⚙️</div>
+        <div class="title">Painel administrativo</div>
+        <div class="desc">Meta diária, catálogo de códigos, preços padrão e ajustes gerais.</div>
+        <div class="badge">Gestão</div>
+      </a>
+
+      <a class="card" href="raspadinha.html">
+        <div class="icon">🎰</div>
+        <div class="title">Raspadinha</div>
+        <div class="desc">Promoção principal com Firebase e resgate por WhatsApp para clientes finais.</div>
+        <div class="badge">Cliente final</div>
+      </a>
+
+      <a class="card" href="painel-raspadinha.html">
+        <div class="icon">📋</div>
+        <div class="title">Painel da raspadinha</div>
+        <div class="desc">Visualize jogadas, códigos, prêmios e marque resgates.</div>
+        <div class="badge">Admin</div>
+      </a>
+    </div>
+
+    <div class="footer">Açaistel • Versão Integrada Avançada 2026</div>
+  </div>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,180 @@
+DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Relatórios Açaí­stel</title>
+<style>
+:root{--bg:#2b0148;--card:#5c0097;--card2:#6d12ad;--gold:#ffd54a;--text:#fff;--muted:#ead9ff;--line:rgba(255,255,255,.16)}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:linear-gradient(180deg,var(--bg),#210038);color:var(--text)}
+.wrap{max-width:1380px;margin:0 auto;padding:20px 16px 40px}
+.hero h1{margin:0;font-size:38px;font-weight:800}
+.hero p{margin:8px 0 18px;color:var(--muted)}
+.card{background:linear-gradient(180deg,var(--card),var(--card2));border-radius:24px;padding:18px;margin-bottom:18px;border:1px solid var(--line)}
+.grid{display:grid;gap:14px}
+.top-grid{grid-template-columns:1.2fr 1fr auto auto}
+.summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.metric{background:rgba(255,255,255,.08);border:1px solid var(--line);border-radius:18px;padding:16px}
+.metric .t{color:var(--muted);font-size:14px;margin-bottom:8px}
+.metric .v{font-size:28px;font-weight:800}
+.field,.btn{font:inherit;border:none;outline:none;border-radius:14px}
+.field{width:100%;padding:14px;background:#fff;color:#2b0148}
+.btn{padding:14px 16px;font-weight:700;cursor:pointer}
+.btn.primary{background:var(--gold);color:#442b00}
+.btn.secondary{background:#fff;color:#4a007d}
+.cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px}
+.list{display:grid;gap:10px}
+.item{background:rgba(255,255,255,.08);border:1px solid var(--line);border-radius:16px;padding:12px 14px}
+.item b{display:block;margin-bottom:6px}
+.muted{color:var(--muted)}
+@media (max-width:1000px){.top-grid,.summary,.cols{grid-template-columns:1fr 1fr}}
+@media (max-width:700px){.top-grid,.summary,.cols{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <h1>Relatórios Açaí­stel</h1>
+    <p>Ranking de pedidos, todos os produtos vendidos, histórico por cliente e exportação mensal em PDF.</p>
+  </div>
+
+  <div class="card">
+    <div class="grid top-grid">
+      <input id="mesRef" class="field" type="month">
+      <input id="clienteBusca" class="field" placeholder="Buscar cliente por nome ou telefone">
+      <button id="atualizarBtn" class="btn secondary">Atualizar</button>
+      <button id="pdfBtn" class="btn primary">Salvar PDF mensal</button>
+    </div>
+  </div>
+
+  <div class="summary">
+    <div class="metric"><div class="t">Pedidos no mês</div><div id="mPedidos" class="v">0</div></div>
+    <div class="metric"><div class="t">Faturamento do mês</div><div id="mFaturamento" class="v">R$ 0,00</div></div>
+    <div class="metric"><div class="t">Cliente líder</div><div id="mLider" class="v" style="font-size:20px">-</div></div>
+    <div class="metric"><div class="t">Produto líder</div><div id="mProduto" class="v" style="font-size:20px">-</div></div>
+  </div>
+
+  <div class="cols" style="margin-top:18px">
+    <div class="card">
+      <h2>Ranking de pedidos</h2>
+      <div id="ranking" class="list"></div>
+    </div>
+    <div class="card">
+      <h2>Produtos vendidos</h2>
+      <div id="produtos" class="list"></div>
+    </div>
+    <div class="card">
+      <h2>Compras por cliente</h2>
+      <div id="clienteResumo" class="list"></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBu1hRG2tXqnpZC0aMwADIeHDI4CdOEDCc",
+  authDomain: "raspadinha-atualizada.firebaseapp.com",
+  projectId: "raspadinha-atualizada",
+  storageBucket: "raspadinha-atualizada.firebasestorage.app",
+  messagingSenderId: "287257624054",
+  appId: "1:287257624054:web:79639f835cff59bdb51bd7",
+  measurementId: "G-29CLHSR79B"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+let pedidos = [];
+
+const els = {
+  mesRef: document.getElementById('mesRef'),
+  clienteBusca: document.getElementById('clienteBusca'),
+  atualizarBtn: document.getElementById('atualizarBtn'),
+  pdfBtn: document.getElementById('pdfBtn'),
+  mPedidos: document.getElementById('mPedidos'),
+  mFaturamento: document.getElementById('mFaturamento'),
+  mLider: document.getElementById('mLider'),
+  mProduto: document.getElementById('mProduto'),
+  ranking: document.getElementById('ranking'),
+  produtos: document.getElementById('produtos'),
+  clienteResumo: document.getElementById('clienteResumo'),
+};
+
+function br(v){ return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
+function hojeMes(){ const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }
+function toIso(brDate){ if(!brDate || !String(brDate).includes('/')) return brDate || ''; const [d,m,y] = String(brDate).split('/'); return `${y}-${m}-${d}`; }
+function pedidoIso(p){ return p.dataISO || toIso(p.data); }
+function totalPedido(p){ return Number(p.valorProdutos ?? p.valor ?? 0) + Number(p.entrega || 0); }
+function contaComoReceita(p){ return ['Pago','Preparando','Entregue'].includes(p.status) || (p.pagamento === 'Fiado' && p.recebidoEmISO); }
+
+function itensPedido(p){
+  if(Array.isArray(p.itensCodigo) && p.itensCodigo.length) return p.itensCodigo;
+  return [];
+}
+
+async function carregar(){
+  const snap = await getDocs(query(collection(db,'pedidos'), orderBy('createdAt','desc')));
+  pedidos = snap.docs.map(d => ({id:d.id, ...d.data()})).filter(x => !x.deleted);
+  render();
+}
+
+function render(){
+  const mes = els.mesRef.value || hojeMes();
+  const termo = (els.clienteBusca.value || '').trim().toLowerCase();
+  const rows = pedidos.filter(p => pedidoIso(p).startsWith(mes) && contaComoReceita(p));
+
+  const byCliente = {};
+  const byProduto = {};
+  rows.forEach(p => {
+    const key = `${(p.cliente||'Sem nome').trim()}|${String(p.telefone||'').trim()}`;
+    if(!byCliente[key]) byCliente[key] = {nome:(p.cliente||'Sem nome').trim()||'Sem nome', telefone:String(p.telefone||'').trim(), pedidos:0, total:0, entrega:0, compras:[]};
+    byCliente[key].pedidos += 1;
+    byCliente[key].total += Number(p.valorProdutos ?? p.valor ?? 0);
+    byCliente[key].entrega += Number(p.entrega || 0);
+    byCliente[key].compras.push({data:p.data || pedidoIso(p), pedido:p.pedido || '-', total:totalPedido(p)});
+
+    itensPedido(p).forEach(item => {
+      const nome = item.nome || 'Item';
+      if(!byProduto[nome]) byProduto[nome] = {qtd:0, valor:0};
+      byProduto[nome].qtd += Number(item.quantidade || 0);
+      byProduto[nome].valor += Number(item.subtotal || 0);
+    });
+  });
+
+  const clientes = Object.values(byCliente).sort((a,b)=>(b.total+b.entrega)-(a.total+a.entrega));
+  const produtos = Object.entries(byProduto).sort((a,b)=>b[1].qtd-a[1].qtd);
+  const filtradoCliente = termo ? clientes.filter(c => `${c.nome} ${c.telefone}`.toLowerCase().includes(termo)) : clientes;
+
+  els.mPedidos.textContent = String(rows.length);
+  els.mFaturamento.textContent = br(rows.reduce((s,p)=>s+totalPedido(p),0));
+  els.mLider.textContent = clientes[0] ? clientes[0].nome : '-';
+  els.mProduto.textContent = produtos[0] ? produtos[0][0] : '-';
+
+  els.ranking.innerHTML = clientes.length ? clientes.map((c,i) => `<div class="item"><b>${i+1}Ã‚Âº • ${c.nome}</b><div>${c.telefone || 'Sem telefone'} • ${c.pedidos} pedido(s)</div><div class="muted">Produtos: ${br(c.total)} • Entregas: ${br(c.entrega)} • Total: ${br(c.total+c.entrega)}</div></div>`).join('') : '<div class="item">Sem dados no mês.</div>';
+
+  els.produtos.innerHTML = produtos.length ? produtos.map(([nome,info]) => `<div class="item"><b>${nome}</b><div>Quantidade: ${info.qtd}</div><div class="muted">Valor vendido: ${br(info.valor)}</div></div>`).join('') : '<div class="item">Sem produtos no mês.</div>';
+
+  els.clienteResumo.innerHTML = filtradoCliente.length ? filtradoCliente.map(c => `<div class="item"><b>${c.nome}</b><div>${c.telefone || 'Sem telefone'} • ${c.pedidos} pedido(s)</div><div class="muted">Total no mês: ${br(c.total+c.entrega)}</div><div class="muted" style="margin-top:8px">${c.compras.slice(0,20).map(x => `${x.data} • ${x.pedido} • ${br(x.total)}`).join('<br>')}</div></div>`).join('') : '<div class="item">Nenhum cliente encontrado.</div>';
+}
+
+function exportarPdf(){
+  const mes = els.mesRef.value || hojeMes();
+  const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Relatórios ${mes}</title><style>body{font-family:Arial,sans-serif;margin:24px;color:#222}h1,h2{margin:0 0 10px}table{width:100%;border-collapse:collapse;margin-top:8px}th,td{border:1px solid #ddd;padding:8px;text-align:left}th{background:#f7f7f7}@media print{body{margin:10mm}.no-print{display:none}}</style></head><body><h1>Relatórios mensais Açaí­stel</h1><div>mês: ${mes}</div><div style="margin-top:18px">${document.querySelector('.summary').outerHTML}</div><div style="margin-top:18px"><h2>Ranking de clientes</h2>${els.ranking.innerHTML}</div><div style="margin-top:18px"><h2>Produtos vendidos</h2>${els.produtos.innerHTML}</div><div style="margin-top:18px"><h2>Compras por cliente</h2>${els.clienteResumo.innerHTML}</div><div class="no-print" style="margin-top:18px"><button onclick="window.print()">Imprimir / Salvar em PDF</button></div></body></html>`;
+  const w = window.open('', '_blank');
+  if(!w) return alert('Seu navegador bloqueou a abertura do PDF.');
+  w.document.open(); w.document.write(html); w.document.close();
+}
+
+els.mesRef.value = hojeMes();
+els.atualizarBtn.addEventListener('click', render);
+els.clienteBusca.addEventListener('input', render);
+els.pdfBtn.addEventListener('click', exportarPdf);
+await carregar();
+</script>
+</body>
+</html>
+
+

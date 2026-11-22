@@ -1,0 +1,314 @@
+﻿DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Raspadinha AÃ§aÃ­Â­stel</title>
+  <style>
+    body{margin:0;font-family:Arial,sans-serif;background:#3f0071;color:#fff;text-align:center}
+    .container{max-width:420px;margin:auto;padding:20px}
+    h1{margin:0;font-size:38px;font-weight:700}
+    .subtitle{font-size:22px;line-height:1.2;margin:28px 0 16px}
+    .card{background:#5f0099;border-radius:25px;padding:20px}
+    .scratch-wrap{position:relative;height:188px;background:linear-gradient(90deg,#f3cf57 0%,#ffd700 70%,#ffcf00 100%);border-radius:18px;overflow:hidden;margin:20px 0}
+    .prize-under{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;color:#442400;font-size:22px;font-weight:700;z-index:1}
+    canvas{position:absolute;inset:0;width:100%;height:100%;z-index:2;touch-action:none}
+    .result{min-height:110px;font-size:22px;margin:8px 0 6px}
+    .result p{margin:8px 0;font-size:18px}
+    button{width:100%;padding:15px;border:none;border-radius:10px;margin-top:10px;font-size:18px;color:#fff;cursor:pointer}
+    .reveal{background:#b000a9}
+    .whatsapp{background:#009b00;display:none}
+    .overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:18px;z-index:20}
+    .overlay.show{display:flex}
+    .modal{background:#fff;color:#000;padding:20px;border-radius:15px;width:90%;max-width:320px;text-align:left}
+    .modal h3{margin:0 0 10px;text-align:center;color:#4d007d}
+    .modal p{margin:0 0 12px;font-size:15px;line-height:1.35}
+    .modal input{width:100%;padding:12px;font-size:18px;border:1px solid #ccc;border-radius:10px;outline:none}
+    .modal-actions{display:flex;gap:10px;margin-top:12px}
+    .modal-actions button{flex:1;margin-top:0}
+    .cancel{background:#ddd;color:#333}
+    .save{background:#7a00c4;color:#fff}
+    .error{min-height:18px;color:#c4004b;font-size:14px;margin-top:8px}
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Raspadinha AÃ§aÃ­Â­stel</h1>
+  <div class="subtitle">Raspe e concorra a AÃ§aÃ­Â­ grÃ¡tis<br>1 chance por dia</div>
+
+  <div class="card">
+    <div class="scratch-wrap">
+      <div id="prizeUnder" class="prize-under"></div>
+      <canvas id="scratch" width="360" height="188"></canvas>
+    </div>
+
+    <div id="result" class="result"></div>
+
+    <button id="revealBtn" class="reveal">REVELAR PRÃƒÆ’Ã…Â MIO</button>
+    <button id="zapBtn" class="whatsapp">RESGATAR NO WHATSAPP</button>
+  </div>
+</div>
+
+<div id="overlay" class="overlay">
+  <div class="modal">
+    <h3>Digite seu WhatsApp</h3>
+    <p>Informe seu nÃƒÆ’Ã‚Âºmero com DDD antes de revelar o prÃªmio.</p>
+    <input id="phoneInput" type="tel" placeholder="(77) 99999-9999" maxlength="16">
+    <div id="phoneError" class="error"></div>
+    <div class="modal-actions">
+      <button id="cancelPhone" class="cancel" type="button">Cancelar</button>
+      <button id="savePhone" class="save" type="button">Continuar</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, runTransaction, serverTimestamp, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+
+const app = initializeApp({
+  apiKey:"AIzaSyBu1hRG2tXqnpZC0aMwADIeHDI4CdOEDCc",
+  authDomain:"raspadinha-atualizada.firebaseapp.com",
+  projectId:"raspadinha-atualizada",
+  storageBucket:"raspadinha-atualizada.firebasestorage.app",
+  messagingSenderId:"287257624054",
+  appId:"1:287257624054:web:79639f835cff59bdb51bd7",
+  measurementId:"G-29CLHSR79B"
+});
+
+const db = getFirestore(app);
+
+const revealBtn = document.getElementById("revealBtn");
+const zapBtn = document.getElementById("zapBtn");
+const result = document.getElementById("result");
+const prizeUnder = document.getElementById("prizeUnder");
+
+const overlay = document.getElementById("overlay");
+const phoneInput = document.getElementById("phoneInput");
+const phoneError = document.getElementById("phoneError");
+const cancelPhone = document.getElementById("cancelPhone");
+const savePhone = document.getElementById("savePhone");
+
+const canvas = document.getElementById("scratch");
+const ctx = canvas.getContext("2d");
+
+const phoneStorageKey = "raspadinha_whatsapp";
+let userPhone = localStorage.getItem(phoneStorageKey) || "";
+let currentPrize = "";
+let currentCode = "";
+let currentDate = "";
+let currentHour = "";
+
+function nowInfo() {
+  const n = new Date();
+  const data = n.toLocaleDateString("pt-BR");
+  const hora = n.toLocaleTimeString("pt-BR");
+  const y = n.getFullYear();
+  const m = String(n.getMonth() + 1).padStart(2, "0");
+  const d = String(n.getDate()).padStart(2, "0");
+  return { data, hora, key: `${y}-${m}-${d}` };
+}
+
+function prize(c, extras = {acai400:false, acai500:false}){
+  let cycle=(c%16)+1;
+  if(cycle===10)return"🎁 1 Açaí de 250ml 🏆";
+  if(cycle===11)return"🎁 1 Açaí de 300ml 🏆";
+  if(cycle===12)return"🎟️ 14% OFF + Entrega Grátis (300ml)";
+  if(cycle===13)return"🎟️ 11% OFF + Entrega Grátis (500ml)";
+  if(cycle===14)return"🎟️ 8% OFF + Entrega Grátis (700ml)";
+  if(cycle===15)return extras.acai400 ? "🎁 1 Açaí de 400ml 🏆" : "❌ Não foi dessa vez";
+  if(cycle===16)return extras.acai500 ? "🎁 1 Açaí de 500ml 🏆" : "❌ Não foi dessa vez";
+  return "❌ Não foi dessa vez";
+}
+
+function formatPhone(v){
+  const d=v.replace(/\D/g,"").slice(0,11);
+  if(d.length<=2)return d;
+  if(d.length<=7)return `(${d.slice(0,2)}) ${d.slice(2)}`;
+  return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
+}
+function normalizePhone(v){ return v.replace(/\D/g,""); }
+
+function showResult(premio, codigo, data, hora, extra=""){
+  result.innerHTML = `
+    <div style="font-size:22px;font-weight:700;margin-bottom:12px;">${premio}</div>
+    <p><strong>Data:</strong> ${data}</p>
+    <p><strong>Hora:</strong> ${hora}</p>
+    <p><strong>CÃ³digo:</strong> ${codigo}</p>
+    ${extra ? `<p>${extra}</p>` : ""}
+  `;
+}
+function enableWhatsappIfWon(phone,premio,codigo,data,hora){
+  const won=!premio.includes("NÃ£o foi dessa vez");
+  if(!won){ zapBtn.style.display="none"; return; }
+  zapBtn.style.display="block";
+  zapBtn.onclick=()=>window.open(
+    "https://wa.me/5577981570174?text=" +
+    encodeURIComponent(`OlÃ¡! Quero resgatar meu prÃªmio da raspadinha.\n\nWhatsApp: ${phone}\nPrÃªmio: ${premio}\nData: ${data}\nHora: ${hora}\nCÃ³digo: ${codigo}`),
+    "_blank"
+  );
+}
+
+function resetScratch(){
+  ctx.globalCompositeOperation="source-over";
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const grad=ctx.createLinearGradient(0,0,canvas.width,0);
+  grad.addColorStop(0,"#d8b43c");
+  grad.addColorStop(0.82,"#d8b43c");
+  grad.addColorStop(0.83,"#ffd11a");
+  grad.addColorStop(1,"#ffd11a");
+  ctx.fillStyle=grad;
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle="rgba(255,255,255,0.12)";
+  for(let i=0;i<70;i++){
+    const x=Math.random()*canvas.width;
+    const y=Math.random()*canvas.height;
+    const r=Math.random()*2+0.5;
+    ctx.beginPath();
+    ctx.arc(x,y,r,0,Math.PI*2);
+    ctx.fill();
+  }
+}
+
+async function getOrCreateDailyPlay(phone){
+  const { data, hora, key } = nowInfo();
+  const playId = `${key}_${phone}`;
+  const playRef = doc(db,"jogadas",playId);
+  const counterRef = doc(db,"config","contador");
+
+  return await runTransaction(db, async (t) => {
+    const playSnap = await t.get(playRef);
+    if(playSnap.exists()){
+      const d = playSnap.data();
+      return {
+        alreadyPlayed:true,
+        premio:d.premio,
+        codigo:d.codigo,
+        data:d.data,
+        hora:d.hora
+      };
+    }
+
+    const counterSnap = await t.get(counterRef);
+    const v = counterSnap.exists() ? (counterSnap.data().valor || 0) : 0;
+    const next = v + 1;
+    const premio = prize(v, {acai400:true, acai500:true});
+    const codigo = String(Math.floor(100000 + Math.random() * 900000));
+
+    t.set(counterRef,{valor:next},{merge:true});
+    t.set(playRef,{
+      telefone:phone,
+      data:data,
+      dataKey:key,
+      hora:hora,
+      premio:premio,
+      codigo:codigo,
+      contadorGlobal:next,
+      createdAt:serverTimestamp()
+    });
+
+    return {alreadyPlayed:false,premio,codigo,data,hora};
+  });
+}
+
+function openPhoneModal(){
+  phoneInput.value = userPhone ? formatPhone(userPhone) : "";
+  phoneError.textContent = "";
+  overlay.classList.add("show");
+}
+cancelPhone.onclick = () => overlay.classList.remove("show");
+phoneInput.addEventListener("input", () => {
+  phoneInput.value = formatPhone(phoneInput.value);
+  phoneError.textContent = "";
+});
+
+async function play(){
+  try{
+    try {
+      const configSnap = await getDoc(doc(db, "config", "bloqueios_lista"));
+      if (configSnap.exists()) {
+        const blockedList = configSnap.data().phones || [];
+        if (blockedList.includes(userPhone)) {
+          result.innerHTML = "<div style='color:red;font-size:20px;font-weight:700;'>Você está bloqueado. Entre em contato com o suporte.</div>";
+          return;
+        }
+      }
+    } catch(e) {
+      console.warn("Verificação de bloqueio falhou, prosseguindo.", e);
+    }
+
+    revealBtn.disabled = true;
+    const info = await getOrCreateDailyPlay(userPhone);
+
+    currentPrize = info.premio;
+    currentCode = info.codigo;
+    currentDate = info.data;
+    currentHour = info.hora;
+
+    prizeUnder.textContent = currentPrize;
+    showResult(currentPrize, currentCode, currentDate, currentHour, info.alreadyPlayed ? "VocÃª jÃ¡ jogou hoje â˜º" : "");
+    enableWhatsappIfWon(userPhone, currentPrize, currentCode, currentDate, currentHour);
+
+    if(info.alreadyPlayed){
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+    }
+  }catch(e){
+    result.innerHTML = "Erro ao jogar";
+    console.log(e);
+    revealBtn.disabled = false;
+  }
+}
+
+savePhone.onclick = async () => {
+  const normalized = normalizePhone(phoneInput.value);
+  if(normalized.length < 10 || normalized.length > 11){
+    phoneError.textContent = "Digite um WhatsApp vÃ¡lido com DDD.";
+    return;
+  }
+  userPhone = normalized;
+  localStorage.setItem(phoneStorageKey, normalized);
+  overlay.classList.remove("show");
+  await play();
+};
+
+revealBtn.onclick = () => {
+  if(!userPhone){
+    openPhoneModal();
+    return;
+  }
+  play();
+};
+
+let drawing=false;
+function drawAt(clientX, clientY){
+  const rect=canvas.getBoundingClientRect();
+  const x=(clientX-rect.left)*(canvas.width/rect.width);
+  const y=(clientY-rect.top)*(canvas.height/rect.height);
+  ctx.globalCompositeOperation="destination-out";
+  ctx.beginPath();
+  ctx.arc(x,y,18,0,Math.PI*2);
+  ctx.fill();
+}
+function scratchedEnough(){
+  const data=ctx.getImageData(0,0,canvas.width,canvas.height).data;
+  let transparent=0;
+  for(let i=3;i<data.length;i+=4){ if(data[i]<20) transparent++; }
+  return transparent/(canvas.width*canvas.height) > 0.42;
+}
+canvas.addEventListener("mousedown",(e)=>{ if(!currentPrize) return; drawing=true; drawAt(e.clientX,e.clientY); });
+window.addEventListener("mouseup",()=>drawing=false);
+canvas.addEventListener("mousemove",(e)=>{ if(!drawing||!currentPrize) return; drawAt(e.clientX,e.clientY); if(scratchedEnough()){ ctx.clearRect(0,0,canvas.width,canvas.height); drawing=false; } });
+canvas.addEventListener("touchstart",(e)=>{ if(!currentPrize) return; drawing=true; const t=e.touches[0]; drawAt(t.clientX,t.clientY); }, {passive:true});
+window.addEventListener("touchend",()=>drawing=false,{passive:true});
+canvas.addEventListener("touchmove",(e)=>{ if(!drawing||!currentPrize) return; const t=e.touches[0]; drawAt(t.clientX,t.clientY); if(scratchedEnough()){ ctx.clearRect(0,0,canvas.width,canvas.height); drawing=false; } }, {passive:true});
+
+resetScratch();
+prizeUnder.textContent = "";
+</script>
+</body>
+</html>
+
+
+
+

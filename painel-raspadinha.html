@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Painel Açaí­stel</title>
+  <style>
+    :root{
+      --bg:#2d014d;--bg2:#4b007d;--card:#5f0099;--card2:#6f13ad;--gold:#ffd54a;
+      --green:#10b461;--red:#d94a4a;--text:#ffffff;--muted:#e8d8ff;
+      --line:rgba(255,255,255,.14);--shadow:0 16px 40px rgba(0,0,0,.28);--radius:22px;
+    }
+    *{box-sizing:border-box} body{margin:0;font-family:Arial,sans-serif;background:linear-gradient(180deg,var(--bg),#23003d);color:var(--text)}
+    .topbar{position:sticky;top:0;z-index:20;background:linear-gradient(180deg,rgba(95,0,153,.96),rgba(75,0,125,.96));backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+    .topbar-inner{max-width:1200px;margin:0 auto;padding:18px 16px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .brand h1{margin:0;font-size:28px}.brand p{margin:4px 0 0;color:var(--muted);font-size:14px}
+    .admin-badge{background:rgba(255,213,74,.14);color:var(--gold);padding:10px 14px;border-radius:999px;font-weight:700;border:1px solid rgba(255,213,74,.28)}
+    .page{max-width:1200px;margin:0 auto;padding:22px 16px 40px}
+    .summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:18px}
+    .card{background:linear-gradient(180deg,var(--card),var(--card2));border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);border:1px solid var(--line)}
+    .metric-title{font-size:13px;color:var(--muted);margin-bottom:8px}.metric-value{font-size:34px;font-weight:700}
+    .filters{display:grid;grid-template-columns:2fr 1fr 1fr auto auto;gap:12px;margin-bottom:18px}
+    input,select,button{font:inherit;border:none;outline:none}
+    .field,.select{width:100%;background:#fff;color:#2d014d;padding:14px 14px;border-radius:14px}
+    .btn{background:var(--gold);color:#3d1f00;font-weight:700;padding:14px 16px;border-radius:14px;cursor:pointer}
+    .btn.secondary{background:#fff;color:#4b007d}
+    .table-card{padding:0;overflow:hidden}
+    .table-header{display:grid;grid-template-columns: 1.1fr 1.7fr .8fr .8fr .9fr .9fr .9fr 0.9fr;gap:10px;padding:16px 18px;font-size:13px;color:var(--muted);border-bottom:1px solid var(--line);font-weight:700}
+    .row{display:grid;grid-template-columns: 1.1fr 1.7fr .8fr .8fr .9fr .9fr .9fr 0.9fr;gap:10px;padding:16px 18px;border-bottom:1px solid var(--line);align-items:center}
+    .row:last-child{border-bottom:none}.phone{font-weight:700}.small{font-size:13px;color:var(--muted)}
+    .tag{display:inline-flex;align-items:center;justify-content:center;padding:7px 10px;border-radius:999px;font-size:12px;font-weight:700}
+    .tag.win{background:rgba(16,180,97,.18);color:#8dffbe}.tag.discount{background:rgba(255,213,74,.16);color:#ffe58e}.tag.lose{background:rgba(217,74,74,.15);color:#ffb5b5}.tag.done{background:rgba(16,180,97,.18);color:#8dffbe}.tag.pending{background:rgba(255,255,255,.15);color:#fff}
+    .block-btn{width:100%;padding:10px 12px;border-radius:12px;cursor:pointer;font-weight:700;background:var(--red);color:#fff}
+    .block-btn.blocked{background:var(--green)}
+
+    .action-btn{width:100%;padding:10px 12px;border-radius:12px;cursor:pointer;font-weight:700;background:#fff;color:#4b007d}
+    .action-btn.done{background:var(--green);color:#fff}.empty{padding:28px 18px;text-align:center;color:var(--muted)}.loader{padding:28px;text-align:center;color:var(--muted)}
+    .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:12px;flex-wrap:wrap}.toolbar h2{margin:0;font-size:22px}.note{color:var(--muted);font-size:13px}
+    .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:18px;background:linear-gradient(180deg,var(--bg),#23003d)}
+    .login-card{width:100%;max-width:420px;background:linear-gradient(180deg,var(--card),var(--card2));border-radius:26px;padding:24px;box-shadow:var(--shadow);border:1px solid var(--line)}
+    .login-card h2{margin:0 0 6px;font-size:32px}.login-card p{color:var(--muted);margin:0 0 18px}.error{min-height:20px;color:#ffb5b5;font-size:14px;margin-top:8px}.hidden{display:none!important}
+    @media (max-width:980px){.summary{grid-template-columns:repeat(2,minmax(0,1fr))}.filters{grid-template-columns:1fr 1fr;gap:10px}.filters .wide{grid-column:1/-1}.table-header{display:none}.row{grid-template-columns:1fr;gap:8px}.row>div{display:flex;justify-content:space-between;gap:10px}.row>div::before{content:attr(data-label);color:var(--muted);font-size:13px;font-weight:700}}
+  </style>
+</head>
+<body>
+  <div id="loginView" class="login-wrap">
+    <div class="login-card">
+      <h2>Painel Açaí­stel</h2>
+      <p>Entre com a senha do painel para ver as jogadas e marcar resgates.</p>
+      <input id="passwordInput" class="field" type="password" placeholder="Digite a senha do painel" />
+      <button id="enterBtn" class="btn" style="width:100%;margin-top:12px;">ENTRAR NO PAINEL</button>
+      <div id="loginError" class="error"></div>
+    </div>
+  </div>
+
+  <div id="appView" class="hidden">
+    <div class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <h1>Painel Açaí­stel</h1>
+          <p>Controle de jogadas, prêmios e resgates</p>
+        </div>
+        <div class="admin-badge">ADMIN</div>
+      </div>
+    </div>
+
+    <div class="page">
+      <div class="summary">
+        <div class="card"><div class="metric-title">Total de jogadas</div><div id="metricTotal" class="metric-value">0</div></div>
+        <div class="card"><div class="metric-title">Ganhadores</div><div id="metricWinners" class="metric-value">0</div></div>
+        <div class="card"><div class="metric-title">Descontos</div><div id="metricDiscounts" class="metric-value">0</div></div>
+        <div class="card"><div class="metric-title">Resgatados</div><div id="metricRedeemed" class="metric-value">0</div></div>
+      </div>
+
+      <div class="card">
+        <div class="toolbar">
+          <h2>Jogadas registradas</h2>
+          <div class="note">Filtre por telefone, prêmio, data ou resgate.</div>
+        </div>
+
+        <div class="filters">
+          <input id="searchInput" class="field wide" type="text" placeholder="Buscar por telefone, prêmio ou código" />
+          <select id="typeFilter" class="select">
+            <option value="todos">Todos os resultados</option>
+            <option value="ganhou">Só ganhadores</option>
+            <option value="desconto">Só descontos</option>
+            <option value="nao_ganhou">Só não ganhou</option>
+          </select>
+          <select id="redeemedFilter" class="select">
+            <option value="todos">Todos os resgates</option>
+            <option value="resgatado">Resgatados</option>
+            <option value="pendente">Pendentes</option>
+          </select>
+          <input id="dateFilter" class="field" type="date" />
+          <button id="refreshBtn" class="btn secondary">Atualizar</button>
+        </div>
+      </div>
+
+      <div class="card table-card" style="margin-top:18px;">
+        <div class="table-header">
+          <div>Telefone</div><div>Prêmio</div><div>Código</div><div>Data</div><div>Hora</div><div>Status</div><div>Ação</div><div>Bloqueio</div>
+        </div>
+        <div id="tableBody" class="loader">Carregando jogadas...</div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    console.log("Script painel-raspadinha carregado.");
+
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, query, orderBy, doc, updateDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBu1hRG2tXqnpZC0aMwADIeHDI4CdOEDCc",
+      authDomain: "raspadinha-atualizada.firebaseapp.com",
+      projectId: "raspadinha-atualizada",
+      storageBucket: "raspadinha-atualizada.firebasestorage.app",
+      messagingSenderId: "287257624054",
+      appId: "1:287257624054:web:79639f835cff59bdb51bd7",
+      measurementId: "G-29CLHSR79B"
+    };
+
+    const PANEL_PASSWORD = "acai123";
+    const PANEL_SESSION_KEY = "acai_painel_ok";
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const loginView = document.getElementById("loginView");
+    const appView = document.getElementById("appView");
+    const passwordInput = document.getElementById("passwordInput");
+    const enterBtn = document.getElementById("enterBtn");
+    const loginError = document.getElementById("loginError");
+    const metricTotal = document.getElementById("metricTotal");
+    const metricWinners = document.getElementById("metricWinners");
+    const metricDiscounts = document.getElementById("metricDiscounts");
+    const metricRedeemed = document.getElementById("metricRedeemed");
+    const searchInput = document.getElementById("searchInput");
+    const typeFilter = document.getElementById("typeFilter");
+    const redeemedFilter = document.getElementById("redeemedFilter");
+    const dateFilter = document.getElementById("dateFilter");
+    const refreshBtn = document.getElementById("refreshBtn");
+    const tableBody = document.getElementById("tableBody");
+
+    let allRows = [];
+    let blockedPhones = new Set();
+
+
+    function isWinner(prize){ return prize.includes("Açaí"); }
+    function isDiscount(prize){ return prize.includes("OFF"); }
+    function isLose(prize){ return prize.includes("Não foi dessa vez"); }
+    function toDateInputValue(brDate){
+      if(!brDate || !brDate.includes("/")) return "";
+      const [d,m,y] = brDate.split("/");
+      return `${y}-${m.padStart(2,"0")}-${d.padStart(2,"0")}`;
+    }
+    function statusTag(prize){
+      if(isWinner(prize)) return '<span class="tag win">GANHOU</span>';
+      if(isDiscount(prize)) return '<span class="tag discount">DESCONTO</span>';
+      return '<span class="tag lose">NÃO GANHOU</span>';
+    }
+    function esc(text){
+      return String(text ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;");
+    }
+
+    function updateMetrics(rows){
+      metricTotal.textContent = rows.length;
+      metricWinners.textContent = rows.filter(r => isWinner(r.premio)).length;
+      metricDiscounts.textContent = rows.filter(r => isDiscount(r.premio)).length;
+      metricRedeemed.textContent = rows.filter(r => !!r.resgatado).length;
+    }
+
+    function filteredRows(){
+      const search = searchInput.value.trim().toLowerCase();
+      const type = typeFilter.value;
+      const redeemed = redeemedFilter.value;
+      const date = dateFilter.value;
+
+      return allRows.filter(row => {
+        const searchOk = !search || [row.telefone || "", row.premio || "", row.codigo || ""].join(" ").toLowerCase().includes(search);
+        let typeOk = true;
+        if(type === "ganhou") typeOk = isWinner(row.premio);
+        if(type === "desconto") typeOk = isDiscount(row.premio);
+        if(type === "nao_ganhou") typeOk = isLose(row.premio);
+        let redeemedOk = true;
+        if(redeemed === "resgatado") redeemedOk = !!row.resgatado;
+        if(redeemed === "pendente") redeemedOk = !row.resgatado;
+        let dateOk = true;
+        if(date) dateOk = toDateInputValue(row.data) === date;
+        return searchOk && typeOk && redeemedOk && dateOk;
+      });
+    }
+
+    function renderTable(){
+      const rows = filteredRows();
+      if(!rows.length){
+        tableBody.innerHTML = '<div class="empty">Nenhuma jogada encontrada com esse filtro.</div>';
+        return;
+      }
+      tableBody.innerHTML = rows.map(row => `
+        <div class="row">
+          <div data-label="Telefone"><div class="phone">${esc(row.telefone || "-")}</div></div>
+          <div data-label="Prêmio"><div>${statusTag(row.premio || "")}<div style="margin-top:8px;font-weight:700;">${esc(row.premio || "-")}</div></div></div>
+          <div data-label="Código"><div>${esc(row.codigo || "-")}</div></div>
+          <div data-label="Data"><div>${esc(row.data || "-")}</div></div>
+          <div data-label="Hora"><div>${esc(row.hora || "-")}</div></div>
+          <div data-label="Status"><div>${row.resgatado ? '<span class="tag done">RESGATADO</span>' : '<span class="tag pending">PENDENTE</span>'}</div></div>
+          <div data-label="Ação"><button class="action-btn ${row.resgatado ? 'done' : ''}" data-id="${esc(row.id)}" data-next="${row.resgatado ? '0' : '1'}">${row.resgatado ? 'Desfazer' : 'Marcar resgatado'}</button></div>
+          <div data-label="Bloqueio"><button class="block-btn ${blockedPhones.has(row.telefone) ? 'blocked' : ''}" data-phone="${esc(row.telefone)}">${blockedPhones.has(row.telefone) ? 'Desbloquear' : 'Bloquear'}</button></div>
+        </div>
+      `).join("");
+
+      document.querySelectorAll(".action-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const id = btn.getAttribute("data-id");
+          const next = btn.getAttribute("data-next") === "1";
+          btn.disabled = true;
+          try{
+            await updateDoc(doc(db, "jogadas", id), { resgatado: next });
+            const row = allRows.find(r => r.id === id);
+            if(row) row.resgatado = next;
+            updateMetrics(allRows);
+            renderTable();
+          }catch(e){
+            alert("Não foi possível atualizar o resgate.");
+            btn.disabled = false;
+            console.error(e);
+          }
+        });
+      });
+
+
+      document.querySelectorAll(".block-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const phone = btn.getAttribute("data-phone");
+          const isCurrentlyBlocked = blockedPhones.has(phone);
+          btn.disabled = true;
+          try {
+            const configRef = doc(db, "config", "bloqueios_lista");
+            if (isCurrentlyBlocked) {
+              blockedPhones.delete(phone);
+            } else {
+              blockedPhones.add(phone);
+            }
+            await setDoc(configRef, { phones: Array.from(blockedPhones) }, { merge: true });
+            renderTable();
+          } catch(e) {
+            alert("Não foi possível atualizar o bloqueio.");
+            btn.disabled = false;
+            console.error(e);
+          }
+        });
+      });
+    }
+
+
+    async function loadRows(){
+      tableBody.innerHTML = '<div class="loader">Carregando dados...</div>';
+      try{
+        const jogadasSnap = await getDocs(query(collection(db, "jogadas"), orderBy("createdAt", "desc")));
+        allRows = jogadasSnap.docs.map(d => ({ id:d.id, ...d.data() }));
+
+        // Tentativa de carregar bloqueios de um doc na coleção 'config' (mais seguro quanto a permissões)
+        try {
+          const configSnap = await getDoc(doc(db, "config", "bloqueios_lista"));
+          if (configSnap.exists()) {
+            blockedPhones = new Set(configSnap.data().phones || []);
+          }
+        } catch(e) {
+          console.warn("Configuração de bloqueios não acessível, tratando como vazio.", e);
+          blockedPhones = new Set();
+        }
+
+        updateMetrics(allRows);
+        renderTable();
+      }catch(e){
+        tableBody.innerHTML = '<div class="empty">Erro ao carregar os dados do Firebase.</div>';
+        console.error(e);
+      }
+    }
+
+    // Auditoria Final de Eventos e Sintaxe
+    const loginBtn = document.getElementById("enterBtn");
+    const pInput = document.getElementById("passwordInput");
+    const lErr = document.getElementById("loginError");
+
+    function handleLogin() {
+      const p = pInput.value ? pInput.value.trim() : "";
+      if (p === "acai123") {
+        sessionStorage.setItem("acai_painel_ok", "1");
+        document.getElementById("loginView").style.display = "none";
+        document.getElementById("appView").classList.remove("hidden");
+        document.getElementById("appView").style.display = "block";
+        if(typeof loadRows === 'function') loadRows();
+      } else {
+        lErr.textContent = "Senha incorreta.";
+      }
+    }
+
+    if (loginBtn) {
+      loginBtn.onclick = function(e) {
+        e.preventDefault();
+        handleLogin();
+      };
+    }
+
+    if (pInput) {
+      pInput.onkeydown = function(e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          handleLogin();
+        }
+      };
+    }
+    [searchInput, typeFilter, redeemedFilter, dateFilter].forEach(el => {
+      el.addEventListener("input", renderTable);
+      el.addEventListener("change", renderTable);
+    });
+    refreshBtn.addEventListener("click", loadRows);
+
+    if(sessionStorage.getItem(PANEL_SESSION_KEY) === "1"){
+      loginView.classList.add("hidden");
+      appView.classList.remove("hidden");
+      loadRows();
+    }
+    console.log("Script painel-raspadinha finalizado corretamente.");
+  </script>
+</body>
+</html>
+
+
+

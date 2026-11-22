@@ -1,0 +1,9 @@
+{
+  "name": "Açaistel",
+  "short_name": "Açaistel",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#2b0148",
+  "theme_color": "#4b007d",
+  "description": "App Açaistel integrado com raspadinha, painel, pedidos e caixa."
+}

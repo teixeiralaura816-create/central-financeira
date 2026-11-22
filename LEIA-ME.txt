@@ -1,0 +1,27 @@
+﻿AÃ‡AISTEL APP INTEGRADO
+
+Arquivos:
+- index.html -> tela inicial
+- raspadinha.html -> mantÃ©m o Firebase e dados atuais da raspadinha
+- painel-raspadinha.html -> mantÃ©m o painel atual da raspadinha
+- pedidos.html -> pedidos online com Firebase
+- caixa.html -> caixa diÃ¡rio integrado com importaÃ§Ã£o de pedidos pagos
+
+IMPORTANTE
+1) Se vocÃª publicar NO MESMO PROJETO/DOMÃNIO do caixa anterior, os fechamentos locais tendem a continuar, porque mantive a mesma chave do localStorage.
+2) Os dados da raspadinha e do painel da raspadinha permanecem porque continuam usando o mesmo Firebase.
+3) Para o painel de pedidos funcionar, a coleÃ§Ã£o 'pedidos' precisa estar liberada nas regras.
+
+
+ATUALIZAÃ‡ÃƒO 2026-04-21
+- Caixa diÃ¡rio agora trabalha por mês normal (01 até 30/31) usando o seletor de mês.
+- Antes de mudar o mês, use o botÃ£o Salvar PDF mensal para fazer o balanÃ§o.
+- O histórico mostrado no caixa agora Ã© diÃ¡rio e filtrado pelo mês selecionado.
+- Contas fixas atualizadas com Ãgua, Moto e Mapec.
+- Despesas operacionais atualizadas com Gasolina e sem Taxas.
+- O saldo acumulado do caixa considera o acumulado do mês, não apenas a entrada do dia.
+
+- controle.html -> central de controle separada
+- compras.html -> planilha automática de compras da semana
+
+

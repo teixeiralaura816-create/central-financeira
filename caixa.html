@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Caixa Açaistel Integrado</title>
+<style>
+:root{--bg:#2b0148;--card:#5c0097;--card2:#6d12ad;--gold:#ffd54a;--green:#18c46b;--red:#ff5c5c;--text:#ffffff;--muted:#ead9ff;--line:rgba(255,255,255,.16)}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:linear-gradient(180deg,var(--bg),#210038);color:var(--text)}
+.top{padding:24px 16px 10px;text-align:center}
+.top h1{margin:0;font-size:42px;font-weight:800}.top p{margin:8px 0 0;color:var(--muted);font-size:18px}
+.wrap{max-width:1400px;margin:0 auto;padding:12px 16px 40px}
+.card{background:linear-gradient(180deg,var(--card),var(--card2));border-radius:24px;padding:20px;margin-bottom:18px;border:1px solid var(--line);box-shadow:0 16px 40px rgba(0,0,0,.24)}
+.card h2{margin:0 0 14px;font-size:28px}
+.toolbar{display:grid;grid-template-columns:repeat(4,minmax(180px,1fr));gap:12px;align-items:end}
+.period-grid{display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end}
+label{display:block;font-size:14px;color:var(--muted);margin-bottom:6px}
+input,button,select{font:inherit}
+input[type="number"],input[type="date"],input[type="text"]{width:100%;padding:12px 14px;border:none;border-radius:14px;background:#fff;color:#2b0148}
+.btn{border:none;border-radius:14px;padding:13px 18px;font-weight:700;cursor:pointer}
+.btn.primary{background:var(--gold);color:#442b00}.btn.secondary{background:#fff;color:#4a007d}.btn.success{background:#18c46b;color:#fff}
+.grid-2{display:grid;grid-template-columns:1.15fr .85fr;gap:18px}
+.table{width:100%;border-collapse:collapse;table-layout:fixed}
+.table col:first-child{width:46%}
+.table col:nth-child(2){width:18%}
+.table col:nth-child(3){width:18%}
+.table col:nth-child(4){width:18%}
+.table th,.table td{padding:12px 10px;border-bottom:1px solid var(--line);text-align:center;vertical-align:middle}
+.table td{height:56px}
+.table th{background:rgba(255,255,255,.05)}
+.table th{color:var(--muted);font-size:14px}
+.table td:first-child,.table th:first-child{text-align:left}
+.table tr:last-child td{border-bottom:none}
+.category{margin-top:8px;margin-bottom:12px;font-size:18px;font-weight:700;color:var(--gold)}
+.small-input{max-width:110px;margin:0 auto;width:100%;text-align:center}
+.money-table th:first-child,.money-table td:first-child{text-align:left}
+.money-table th:last-child,.money-table td:last-child{text-align:center}
+.total-cell{min-width:90px;display:inline-block;font-weight:700}
+.summary{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}
+.metric{background:rgba(255,255,255,.08);border:1px solid var(--line);border-radius:18px;padding:16px;min-width:0;overflow:hidden}
+.metric .title{color:var(--muted);font-size:14px;margin-bottom:8px;line-height:1.25}.metric .value{font-size:clamp(18px,2.1vw,24px);font-weight:800;line-height:1.08;letter-spacing:-0.02em;white-space:normal;overflow-wrap:anywhere;word-break:break-word}
+.meta-box{text-align:center;padding:18px;border-radius:18px;font-size:24px;font-weight:800}
+.meta-ok{background:rgba(24,196,107,.16);color:#93ffbf;border:1px solid rgba(24,196,107,.35)}
+.meta-bad{background:rgba(255,92,92,.16);color:#ffb0b0;border:1px solid rgba(255,92,92,.35)}
+.tip{margin-top:10px;color:var(--muted);font-size:14px;line-height:1.4}
+.period-box{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px}
+.empty{padding:16px;color:var(--muted);text-align:center}
+.highlight{background:rgba(255,255,255,.08);border:1px solid var(--line);border-radius:18px;padding:16px;margin-top:12px}
+@media (max-width:1100px){.grid-2{grid-template-columns:1fr}.summary{grid-template-columns:repeat(2,minmax(0,1fr))}.period-box{grid-template-columns:repeat(2,minmax(0,1fr))}.toolbar{grid-template-columns:repeat(2,minmax(0,1fr))}.period-grid{grid-template-columns:1fr 1fr}}
+@media (max-width:700px){.summary,.period-box,.toolbar,.period-grid{grid-template-columns:1fr}.table th:nth-child(4), .table td:nth-child(4){display:none}}
+</style>
+</head>
+<body>
+<div class="top">
+  <h1>Caixa Açaistel</h1>
+  <p>Fechamento completo, separação financeira e Sincronização segura dos pedidos pagos</p>
+</div>
+
+<div class="wrap">
+  <div class="card">
+    <h2>Fechamento diário e mensal</h2>
+    <div class="toolbar">
+      <div><label for="data">Data</label><input type="date" id="data"></div>
+      <div><label for="mesAtual">mês em acompanhamento</label><input type="month" id="mesAtual"></div>
+      <button class="btn secondary" id="syncBtn">Sincronizar pedidos pagos</button>
+      <button class="btn success" id="migrateBtn">Migrar histórico local</button>
+      <button class="btn primary" id="salvarBtn">Salvar fechamento</button>
+      <button class="btn secondary" id="relatorioBtn">Relatório diário</button>
+      <button class="btn secondary" id="relatorioMensalBtn">Salvar PDF mensal</button>
+      <button class="btn primary" id="fecharMesBtn">Mudar mês</button>
+      <button class="btn secondary" id="buscarBtn">Buscar por data</button>
+      <button class="btn secondary" id="controleBtn">Central de controle</button>
+      <button class="btn secondary" id="comprasBtn">Compras inteligentes</button>
+      <button class="btn primary" id="centralFinBtn" style="background:var(--gold);color:#2b0148;font-weight:900"> Central Financeira V5</button>
+    </div>
+    <div class="tip">Agora o caixa trabalha por <b>mês normal</b>. Salve o <b>PDF mensal</b> antes de mudar de mês. Ao mudar, o resumo atual limpa a tela e passa a acompanhar somente o mês escolhido, sem apagar seus fechamentos diários já salvos.</div>
+    <div class="highlight">
+      <div><b>Entregas dos pedidos sincronizados:</b> <span id="entregaPedidosView">R$ 0,00</span></div>
+      <div style="margin-top:6px"><b>Pedidos sincronizados:</b> <span id="pedidosImportadosView">0</span></div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="category">Açaí no copo</div>
+      <table class="table"><thead><tr><th>Produto</th><th>Qtd</th><th>Valor</th><th>Total</th></tr></thead><tbody id="produtosCopo"></tbody></table>
+      <div class="category">Açaí na garrafa</div><table class="table"><colgroup><col><col><col><col></colgroup><thead><tr><th>Produto</th><th>Qtd</th><th>Valor</th><th>Total</th></tr></thead><tbody id="produtosGarrafa"></tbody></table>
+      <div class="category">Bebidas</div><table class="table"><colgroup><col><col><col><col></colgroup><thead><tr><th>Produto</th><th>Qtd</th><th>Valor</th><th>Total</th></tr></thead><tbody id="produtosBebidas"></tbody></table>
+      <div class="category">Pastéis</div><table class="table"><colgroup><col><col><col><col></colgroup><thead><tr><th>Produto</th><th>Qtd</th><th>Valor</th><th>Total</th></tr></thead><tbody id="produtosPasteis"></tbody></table>
+      <div class="category">Combos</div><table class="table"><colgroup><col><col><col><col></colgroup><thead><tr><th>Produto</th><th>Qtd</th><th>Valor</th><th>Total</th></tr></thead><tbody id="produtosCombos"></tbody></table>
+    </div>
+    <div>
+      <div class="card"><div class="category">Compras de estoque</div><table class="table money-table"><colgroup><col><col></colgroup><thead><tr><th>Tipo</th><th>Valor</th></tr></thead><tbody id="estoqueTable"></tbody></table></div>
+      <div class="card"><div class="category">Despesas operacionais</div><table class="table money-table"><colgroup><col><col></colgroup><thead><tr><th>Tipo</th><th>Valor</th></tr></thead><tbody id="operacionalTable"></tbody></table></div>
+      <div class="card"><div class="category">Despesas pessoais</div><table class="table money-table"><colgroup><col><col></colgroup><thead><tr><th>Tipo</th><th>Valor</th></tr></thead><tbody id="pessoalTable"></tbody></table></div>
+      <div class="card"><div class="category">Contas fixas do negócio</div><table class="table money-table"><colgroup><col><col></colgroup><thead><tr><th>Tipo</th><th>Valor</th></tr></thead><tbody id="contasTable"></tbody></table></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="category">Resumo do dia</div><div class="tip" id="cicloInfo"></div>
+    <div class="summary">
+      <div class="metric"><div class="title">Produtos vendidos</div><div class="value" id="totalProdutos">R$ 0,00</div></div>
+      <div class="metric"><div class="title">Entregas</div><div class="value" id="totalEntregas">R$ 0,00</div></div>
+      <div class="metric"><div class="title">Total recebido</div><div class="value" id="totalRecebido">R$ 0,00</div></div>
+      <div class="metric"><div class="title">Compra de estoque</div><div class="value" id="totalEstoque">R$ 0,00</div></div>
+      <div class="metric"><div class="title">Operacional</div><div class="value" id="totalOperacional">R$ 0,00</div></div>
+      <div class="metric"><div class="title">Pessoal</div><div class="value" id="totalPessoal">R$ 0,00</div></div>
+      <div class="metric"><div class="title">Contas fixas</div><div class="value" id="totalContas">R$ 0,00</div></div>
+      <div class="metric"><div class="title">Saldo caixa do dia</div><div class="value" id="saldoDia">R$ 0,00</div></div>
+    </div>
+    <div class="summary" style="margin-top:14px">
+      <div class="metric"><div class="title">Lucro operacional</div><div class="value" id="lucroOperacional">R$ 0,00</div></div>
+      <div class="metric"><div class="title">Lucro estimado</div><div class="value" id="lucroEstimado">R$ 0,00</div></div>
+      <div class="metric"><div class="title">Saldo acumulado</div><div class="value" id="saldoAcumulado">R$ 0,00</div></div>
+      <div class="metric"><div class="title">Total vendido no mês</div><div class="value" id="totalPeriodo">R$ 0,00</div></div>
+      <div class="metric"><div class="title">Pedidos importados</div><div class="value" id="pedidosImportadosResumo">0</div></div>
+    </div>
+    <div id="metaBox" class="meta-box meta-bad" style="margin-top:14px;">Meta não batida</div>
+  </div>
+
+  <div class="card">
+    <div class="category">Controle mensal</div>
+    <div class="period-grid">
+      <div><label for="periodoInicio">Início do mês</label><input type="date" id="periodoInicio" disabled></div>
+      <div><label for="periodoFim">Fim do mês</label><input type="date" id="periodoFim" disabled></div>
+      <button class="btn primary" id="periodoBtn">Atualizar mês</button>
+    </div>
+    <div class="period-box" style="margin-top:14px">
+      <div class="metric"><div class="title">Recebido</div><div class="value" id="pVendido">R$ 0,00</div></div>
+      <div class="metric"><div class="title">Estoque</div><div class="value" id="pEstoque">R$ 0,00</div></div>
+      <div class="metric"><div class="title">Operacional</div><div class="value" id="pOperacional">R$ 0,00</div></div>
+      <div class="metric"><div class="title">Pessoal</div><div class="value" id="pPessoal">R$ 0,00</div></div>
+      <div class="metric"><div class="title">Contas</div><div class="value" id="pContas">R$ 0,00</div></div>
+      <div class="metric"><div class="title">Saldo acumulado do mês</div><div class="value" id="pSaldo">R$ 0,00</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="category">Histórico diário salvo</div>
+    <table class="table">
+      <thead><tr><th>Data</th><th>Recebido</th><th>Estoque</th><th>Operacional</th><th>Pessoal</th><th>Contas</th><th>Saldo</th><th>Ação</th></tr></thead>
+      <tbody id="historicoBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, getDocs, query, where, doc, setDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBu1hRG2tXqnpZC0aMwADIeHDI4CdOEDCc",
+  authDomain: "raspadinha-atualizada.firebaseapp.com",
+  projectId: "raspadinha-atualizada",
+  storageBucket: "raspadinha-atualizada.firebasestorage.app",
+  messagingSenderId: "287257624054",
+  appId: "1:287257624054:web:79639f835cff59bdb51bd7",
+  measurementId: "G-29CLHSR79B"
+};
+
+const app = initializeApp(firebaseConfig);
+const dbFS = getFirestore(app);
+let META_DIARIA = 350;
+let MARGEM_ESTIMADA = 35;
+const OLD_STORAGE_KEY = "acaiistel_caixa_diario_v1";
+const produtos = {
+  copo:["Açaí 250ml","Açaí 300ml","Açaí 400ml","Açaí 500ml","Açaí 700ml","Açaí 1L"],
+  garrafa:["Açaí garrafa 300ml","Açaí garrafa 500ml"],
+  bebidas:["Refri lata","Refri litro"],
+  pasteis:["Pastel","Pastel T"],
+  combos:["Combo 500 + 300","Açaí promocional 300ml","Açaí promocional 500ml","Açaí promocional 700ml"]
+};
+const estoqueCompras = ["Reposição de açaí","Complementos","Embalagens de estoque","Outros estoque"];
+const operacional = ["Motoboy","Gás","Gasolina","Manutenção","Outros operacionais"];
+const pessoal = ["Casa","Mercado","Pessoal 1","Pessoal 2","Outros pessoais"];
+const contas = ["Aluguel"," Agua","Energia","Internet","Moto","Mapec","Outros"];
+let cloudHistory = {};
+let activeMonth = "";
+
+function br(v){ return Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"}); }
+function hojeISO(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; }
+function isoToBr(iso){ if(!iso||!iso.includes("-")) return iso; const [y,m,d]=iso.split("-"); return `${d}/${m}/${y}`; }
+function normalizeText(t){ return String(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+
+function parseDay(v){
+  const n = Number(v || 30);
+  return Math.min(31, Math.max(1, n || 20));
+}
+function cycleRangeFrom(refIso, fechamentoDia){
+  const ref = new Date(refIso + 'T12:00:00');
+  const day = parseDay(fechamentoDia);
+  let start;
+  if(ref.getDate() >= day){
+    start = new Date(ref.getFullYear(), ref.getMonth(), day);
+  }else{
+    start = new Date(ref.getFullYear(), ref.getMonth()-1, day);
+  }
+  let end = new Date(start.getFullYear(), start.getMonth()+1, day-1);
+  if(day === 1) end = new Date(start.getFullYear(), start.getMonth()+1, 0);
+  const toIso = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  return {inicio: toIso(start), fim: toIso(end), label: `${isoToBr(toIso(start))} até ${isoToBr(toIso(end))}`};
+}
+function sumDailyRows(rows){
+  return rows.reduce((acc, item) => {
+    acc.totalRecebido += Number(item.totalRecebido || item.totalVendido || 0);
+    acc.totalEstoque += Number(item.totalEstoque || 0);
+    acc.totalOperacional += Number(item.totalOperacional || item.totalDespesas || 0);
+    acc.totalPessoal += Number(item.totalPessoal || 0);
+    acc.totalContas += Number(item.totalContas || 0);
+    acc.saldoDia += Number(item.saldoDia || 0);
+    return acc;
+  }, {totalRecebido:0,totalEstoque:0,totalOperacional:0,totalPessoal:0,totalContas:0,saldoDia:0});
+}
+
+function monthRange(monthStr){
+  const [y,m] = String(monthStr || hojeISO().slice(0,7)).split('-').map(Number);
+  const start = new Date(y, (m||1)-1, 1);
+  const end = new Date(y, (m||1), 0);
+  const toIso = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  return {inicio: toIso(start), fim: toIso(end), label: `${String(m).padStart(2,'0')}/${y}`};
+}
+function selectedMonth(){ return document.getElementById('mesAtual').value || hojeISO().slice(0,7); }
+function updateMonthInputs(){
+  const range = monthRange(selectedMonth());
+  document.getElementById('periodoInicio').value = range.inicio;
+  document.getElementById('periodoFim').value = range.fim;
+  document.getElementById('cicloInfo').textContent = 'mês atual: ' + range.label;
+}
+function collectCurrentMonthSummary(){
+  const range = monthRange(selectedMonth());
+  const ids = Object.keys(cloudHistory).filter(d => d >= range.inicio && d <= range.fim).sort();
+  const rows = ids.map(d => cloudHistory[d]);
+  const sum = sumDailyRows(rows);
+  return {...sum, ids, ...range};
+}
+async function gerarRelatorioMensal(){
+  const resumo = collectCurrentMonthSummary();
+  const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Fechamento mensal ${resumo.label}</title>
+  <style>
+    body{font-family:Arial,sans-serif;background:#fff;color:#222;margin:24px}
+    h1,h2{margin:0 0 10px}
+    .muted{color:#666}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:18px 0}
+    .box{border:1px solid #ddd;border-radius:12px;padding:14px}
+    table{width:100%;border-collapse:collapse;margin-top:10px}
+    th,td{border:1px solid #ddd;padding:8px;text-align:left}
+    th{background:#f7f7f7}
+    .num{text-align:right}
+    @media print{body{margin:10mm}.no-print{display:none}}
+  </style></head><body>
+  <h1>Balanço mensal do caixa</h1>
+  <div class="muted">mês: ${resumo.label}</div>
+  <div class="grid">
+    <div class="box"><b>Total recebido</b><br>${br(resumoDados.totalRecebido)}</div>
+    <div class="box"><b>Estoque</b><br>${br(resumoDados.totalEstoque)}</div>
+    <div class="box"><b>Operacional</b><br>${br(resumoDados.totalOperacional)}</div>
+    <div class="box"><b>Pessoal</b><br>${br(resumoDados.totalPessoal)}</div>
+    <div class="box"><b>Contas</b><br>${br(resumoDados.totalContas)}</div>
+    <div class="box"><b>Saldo acumulado do mês</b><br>${br(resumoDados.saldoDia)}</div>
+  </div>
+  <h2>Movimento diário do mês</h2>
+  <table><thead><tr><th>Data</th><th class="num">Recebido</th><th class="num">Estoque</th><th class="num">Operacional</th><th class="num">Pessoal</th><th class="num">Contas</th><th class="num">Saldo</th></tr></thead>
+  <tbody>${resumo.ids.map(d => {
+    const item = cloudHistory[d] || {};
+    return `<tr><td>${isoToBr(d)}</td><td class="num">${br(item.totalRecebido || 0)}</td><td class="num">${br(item.totalEstoque || 0)}</td><td class="num">${br(item.totalOperacional || 0)}</td><td class="num">${br(item.totalPessoal || 0)}</td><td class="num">${br(item.totalContas || 0)}</td><td class="num">${br(item.saldoDia || 0)}</td></tr>`;
+  }).join('') || '<tr><td colspan="7">Sem dias fechados nesse mês.</td></tr>'}</tbody></table>
+  <div class="no-print" style="margin-top:18px"><button onclick="window.print()">Imprimir / Salvar em PDF</button></div>
+  </body></html>`;
+  const w = window.open('', '_blank');
+  if(!w) return alert('Seu navegador bloqueou a abertura do relatório. Libere pop-ups.');
+  w.document.open(); w.document.write(html); w.document.close();
+}
+function resetVisualMes(){
+  clearForm(false);
+  document.getElementById('pVendido').textContent = br(0);
+  document.getElementById('pEstoque').textContent = br(0);
+  document.getElementById('pOperacional').textContent = br(0);
+  document.getElementById('pPessoal').textContent = br(0);
+  document.getElementById('pContas').textContent = br(0);
+  document.getElementById('pSaldo').textContent = br(0);
+}
+async function mudarMes(){
+  const novoMes = document.getElementById('mesAtual').value;
+  if(!novoMes) return alert('Escolha um mês.');
+  if(activeMonth && activeMonth !== novoMes){
+    const querPdf = confirm(`Antes de mudar de mês, deseja abrir o PDF de balanço de ${monthRange(activeMonth).label}?`);
+    if(querPdf){
+      document.getElementById('mesAtual').value = activeMonth;
+      await gerarRelatorioMensal();
+      document.getElementById('mesAtual').value = novoMes;
+    }
+  }
+  activeMonth = novoMes;
+  updateMonthInputs();
+  const range = monthRange(activeMonth);
+  document.getElementById('data').value = range.inicio;
+  resetVisualMes();
+  renderHistorico();
+  calcularPeriodo();
+}
+async function loadConfig(){
+  try{
+    const snap = await getDoc(doc(dbFS,'configuracoes','painel_admin_v1'));
+    if(snap.exists()){ META_DIARIA = Number(snap.data().metaDiaria || 350); MARGEM_ESTIMADA = Number(snap.data().margemEstimada ?? 35); }
+  }catch(e){ console.error(e); }
+}
+
+function createRows(list, tbodyId, prefix){
+  document.getElementById(tbodyId).innerHTML = list.map((nome,i)=>`
+    <tr><td>${nome}</td><td><input class="small-input" type="number" min="0" step="1" id="${prefix}_q_${i}" /></td><td><input class="small-input" type="number" min="0" step="0.01" id="${prefix}_v_${i}" /></td><td><span class="total-cell" id="${prefix}_t_${i}">R$ 0,00</span></td></tr>
+  `).join('');
+}
+function createMoneyRows(list, tbodyId, prefix){
+  document.getElementById(tbodyId).innerHTML = list.map((nome,i)=>`<tr><td>${nome}</td><td><input class="small-input" type="number" min="0" step="0.01" id="${prefix}_m_${i}" /></td></tr>`).join('');
+}
+
+createRows(produtos.copo,"produtosCopo","copo");
+createRows(produtos.garrafa,"produtosGarrafa","garrafa");
+createRows(produtos.bebidas,"produtosBebidas","bebida");
+createRows(produtos.pasteis,"produtosPasteis","pastel");
+createRows(produtos.combos,"produtosCombos","combo");
+createMoneyRows(estoqueCompras,"estoqueTable","estoque");
+createMoneyRows(operacional,"operacionalTable","op");
+createMoneyRows(pessoal,"pessoalTable","pessoal");
+createMoneyRows(contas,"contasTable","conta");
+document.getElementById("data").value = hojeISO();
+document.getElementById("mesAtual").value = hojeISO().slice(0,7);
+activeMonth = document.getElementById("mesAtual").value;
+updateMonthInputs();
+
+function calcGrupo(list,prefix){
+  let total=0;
+  list.forEach((_,i)=>{
+    const q=parseFloat(document.getElementById(`${prefix}_q_${i}`).value)||0;
+    const v=parseFloat(document.getElementById(`${prefix}_v_${i}`).value)||0;
+    const t=q*v;
+    total+=t;
+    document.getElementById(`${prefix}_t_${i}`).textContent=br(t);
+  });
+  return total;
+}
+function calcMoneyGrupo(list,prefix){
+  let total=0;
+  list.forEach((_,i)=> total += parseFloat(document.getElementById(`${prefix}_m_${i}`).value)||0);
+  return total;
+}
+function totalPeriodoAll(){ const r = monthRange(selectedMonth()); return Object.entries(cloudHistory).reduce((acc,[d,item])=> (d>=r.inicio && d<=r.fim) ? acc+Number(item.totalRecebido||item.totalVendido||0) : acc,0); }
+
+function calcularTudo(){
+  const totalProdutos = calcGrupo(produtos.copo,"copo")+calcGrupo(produtos.garrafa,"garrafa")+calcGrupo(produtos.bebidas,"bebida")+calcGrupo(produtos.pasteis,"pastel")+calcGrupo(produtos.combos,"combo");
+  const totalEntregas = Number(document.getElementById('entregaPedidosView').dataset.valor || 0);
+  const totalRecebido = totalProdutos + totalEntregas;
+  const totalEstoque = calcMoneyGrupo(estoqueCompras,"estoque");
+  const totalOperacional = calcMoneyGrupo(operacional,"op");
+  const totalPessoal = calcMoneyGrupo(pessoal,"pessoal");
+  const totalContas = calcMoneyGrupo(contas,"conta");
+  const lucroOperacional = totalRecebido - totalOperacional - totalContas;
+  const lucroEstimado = (totalRecebido * (Number(MARGEM_ESTIMADA || 0)/100)) - totalOperacional - totalContas;
+  const saldoDia = totalRecebido - totalEstoque - totalOperacional - totalPessoal - totalContas;
+
+  const dataAtual = document.getElementById("data").value;
+  const rangeMes = monthRange(selectedMonth());
+  let saldoAcumulado=0;
+  Object.keys(cloudHistory).sort().forEach(data=>{
+    if(data < rangeMes.inicio || data > rangeMes.fim) return;
+    if(data!==dataAtual) saldoAcumulado += Number(cloudHistory[data].saldoDia||0);
+  });
+  saldoAcumulado += saldoDia;
+
+  document.getElementById("totalProdutos").textContent=br(totalProdutos);
+  document.getElementById("totalEntregas").textContent=br(totalEntregas);
+  document.getElementById("totalRecebido").textContent=br(totalRecebido);
+  document.getElementById("totalEstoque").textContent=br(totalEstoque);
+  document.getElementById("totalOperacional").textContent=br(totalOperacional);
+  document.getElementById("totalPessoal").textContent=br(totalPessoal);
+  document.getElementById("totalContas").textContent=br(totalContas);
+  document.getElementById("saldoDia").textContent=br(saldoDia);
+  document.getElementById("lucroOperacional").textContent=br(lucroOperacional);
+  document.getElementById("lucroEstimado").textContent=br(lucroEstimado);
+  document.getElementById("saldoAcumulado").textContent=br(saldoAcumulado);
+  document.getElementById("totalPeriodo").textContent=br(totalPeriodoAll());
+
+  const metaBox=document.getElementById("metaBox");
+  if(totalRecebido>=META_DIARIA){ metaBox.textContent=`Meta batida • ${br(META_DIARIA)}`; metaBox.className="meta-box meta-ok"; } 
+  else { metaBox.textContent=`Meta não batida • meta ${br(META_DIARIA)}`; metaBox.className="meta-box meta-bad"; }
+
+  return {totalProdutos,totalEntregas,totalRecebido,totalEstoque,totalOperacional,totalPessoal,totalContas,lucroOperacional,lucroEstimado,saldoDia,metaBatida: totalRecebido>=META_DIARIA};
+}
+document.body.addEventListener("input", calcularTudo);
+
+function collectGroup(list,prefix){
+  return list.map((nome,i)=>({nome,quantidade:parseFloat(document.getElementById(`${prefix}_q_${i}`).value)||0,valor:parseFloat(document.getElementById(`${prefix}_v_${i}`).value)||0}));
+}
+function collectMoneyGroup(list,prefix){
+  return list.map((nome,i)=>({nome,valor:parseFloat(document.getElementById(`${prefix}_m_${i}`).value)||0}));
+}
+function fillGroup(items,prefix){
+  items.forEach((item,i)=>{
+    const q=document.getElementById(`${prefix}_q_${i}`);
+    const v=document.getElementById(`${prefix}_v_${i}`);
+    if(q) q.value=item.quantidade??"";
+    if(v) v.value=item.valor??"";
+  });
+}
+function fillMoneyGroup(items,prefix){
+  items.forEach((item,i)=>{
+    const m=document.getElementById(`${prefix}_m_${i}`);
+    if(m) m.value=item.valor??"";
+  });
+}
+function clearForm(keepDate=true){
+  document.querySelectorAll('input[type="number"]').forEach(inp=>inp.value="");
+  document.getElementById('entregaPedidosView').dataset.valor = '0';
+  document.getElementById('entregaPedidosView').textContent = br(0);
+  document.getElementById('pedidosImportadosView').textContent = '0';
+  document.getElementById('pedidosImportadosResumo').textContent = '0';
+  if(!keepDate) document.getElementById("data").value=hojeISO();
+  calcularTudo();
+}
+function subtractSnapshot(snapshot){
+  if(!snapshot) return;
+  Object.entries(snapshot).forEach(([key,val])=>{
+    const q=document.getElementById(`${key}`);
+    if(q) q.value = Math.max(0,(parseFloat(q.value)||0) - Number(val.qty||0));
+  });
+}
+function applySnapshot(snapshot){
+  Object.entries(snapshot).forEach(([key,val])=>{
+    const q=document.getElementById(`${key}`);
+    const vId = key.replace('_q_','_v_');
+    const v=document.getElementById(vId);
+    if(q) q.value = (parseFloat(q.value)||0) + Number(val.qty||0);
+    if(v && !(parseFloat(v.value)>0)) v.value = Number(val.unit||0);
+  });
+}
+function setEntregaImportada(valor, quantidadePedidos=0){
+  document.getElementById('entregaPedidosView').dataset.valor = String(Number(valor||0));
+  document.getElementById('entregaPedidosView').textContent = br(valor);
+  document.getElementById('pedidosImportadosView').textContent = String(quantidadePedidos || 0);
+  document.getElementById('pedidosImportadosResumo').textContent = String(quantidadePedidos || 0);
+}
+function parsePedido(pedido, valor, codigos=''){
+  const codeLines = parseCodes(codigos);
+  if(codeLines.length){
+    if(codeLines.length === 1){
+      return mapCodeNameToKey(codeLines[0].nome, codeLines[0].quantidade, codeLines[0].valorUnitario);
+    }
+    return null;
+  }
+  const t = normalizeText(pedido);
+  const matchQty = t.match(/^\s*(\d+)\s+/);
+  const qty = matchQty ? parseInt(matchQty[1],10) : 1;
+  if (t.includes('combo') && t.includes('500') && t.includes('300')) return {key:'combo_q_0', qty, unit: Number(valor||0)/qty};
+  if (t.includes('pastel')) return {key:'pastel_q_0', qty, unit: Number(valor||0)/qty};
+  if (t.includes('garrafa') && t.includes('300')) return {key:'garrafa_q_0', qty, unit: Number(valor||0)/qty};
+  if (t.includes('garrafa') && t.includes('500')) return {key:'garrafa_q_1', qty, unit: Number(valor||0)/qty};
+  if (t.includes('1l')) return {key:'bebida_q_1', qty, unit: Number(valor||0)/qty};
+  if (t.includes('refri') || t.includes('coca') || t.includes('lata')) return {key:'bebida_q_0', qty, unit: Number(valor||0)/qty};
+  if (t.includes('250')) return {key:'copo_q_0', qty, unit: Number(valor||0)/qty};
+  if (t.includes('300')) return {key:'copo_q_1', qty, unit: Number(valor||0)/qty};
+  if (t.includes('400')) return {key:'copo_q_2', qty, unit: Number(valor||0)/qty};
+  if (t.includes('500')) return {key:'copo_q_3', qty, unit: Number(valor||0)/qty};
+  if (t.includes('700')) return {key:'copo_q_4', qty, unit: Number(valor||0)/qty};
+  return null;
+}
+function parseCodes(str){
+  const raw = String(str || '').trim();
+  if(!raw) return [];
+  const parts = raw.split(/[+,;\n]+/).map(s => s.trim()).filter(Boolean);
+  const lines = [];
+  parts.forEach(part => {
+    let m = part.match(/^(\d+)\s*(?:x|\*)\s*(\d+)$/i);
+    let qty = 1, code = '';
+    if(m){ qty = Number(m[1]); code = m[2]; }
+    else if(/^\d+$/.test(part)){ code = part; }
+    if(!code) return;
+    const map = {
+      '1': {nome:'Açaí 300ml', unit:14},
+      '2': {nome:'Açaí 400ml', unit:16},
+      '3': {nome:'Açaí 500ml', unit:18},
+      '4': {nome:'Açaí 700ml', unit:26},
+      '16': {nome:'Açaí 1L', unit:35},
+      '5': {nome:'Pastel', unit:10},
+      '6': {nome:'Refri lata', unit:5},
+      '7': {nome:'Refri litro', unit:10},
+      '8': {nome:'Açaí garrafa 300ml', unit:14},
+      '9': {nome:'Açaí garrafa 500ml', unit:18},
+      '10': {nome:'Combo 500 + 300', unit:29},
+      '11': {nome:'Açaí 250ml', unit:12},
+      '12': {nome:'Pastel T', unit:10},
+      '13': {nome:'Açaí promocional 300ml', unit:12},
+      '14': {nome:'Açaí promocional 500ml', unit:16},
+      '15': {nome:'Açaí promocional 700ml', unit:24}
+    };
+    if(!map[code]) return;
+    lines.push({codigo: code, quantidade: qty, nome: map[code].nome, valorUnitario: map[code].unit});
+  });
+  return lines;
+}
+function mapCodeNameToKey(nome, qty, unit){
+  const t = normalizeText(nome);
+  if (t.includes('combo') && t.includes('500') && t.includes('300')) return {key:'combo_q_0', qty, unit};
+  if (t.includes('pastel')) return {key:'pastel_q_0', qty, unit};
+  if (t.includes('garrafa') && t.includes('300')) return {key:'garrafa_q_0', qty, unit};
+  if (t.includes('garrafa') && t.includes('500')) return {key:'garrafa_q_1', qty, unit};
+  if (t.includes('1l')) return {key:'bebida_q_1', qty, unit};
+  if (t.includes('refri') || t.includes('coca') || t.includes('lata')) return {key:'bebida_q_0', qty, unit};
+  if (t.includes('250')) return {key:'copo_q_0', qty, unit};
+  if (t.includes('300')) return {key:'copo_q_1', qty, unit};
+  if (t.includes('400')) return {key:'copo_q_2', qty, unit};
+  if (t.includes('500')) return {key:'copo_q_3', qty, unit};
+  if (t.includes('700')) return {key:'copo_q_4', qty, unit};
+  return null;
+}
+
+async function syncPedidosPagos(){
+  const dataIso = document.getElementById("data").value;
+  if(!dataIso) return alert("Escolha uma data.");
+
+  try{
+    const docRef = doc(dbFS,"caixa_fechamentos",dataIso);
+    const snap = await getDoc(docRef);
+    const current = snap.exists() ? snap.data() : null;
+    const oldSnapshot = current?.importedSnapshot || null;
+
+    clearForm(true);
+
+    if(current){
+      fillGroup(current.produtos?.copo || [], "copo");
+      fillGroup(current.produtos?.garrafa || [], "garrafa");
+      fillGroup(current.produtos?.bebidas || [], "bebida");
+      fillGroup(current.produtos?.pasteis || [], "pastel");
+      fillGroup(current.produtos?.combos || [], "combo");
+      fillMoneyGroup(current.estoqueCompras || [], "estoque");
+      fillMoneyGroup(current.despesasOperacionais || current.despesas || [], "op");
+      fillMoneyGroup(current.despesasPessoais || [], "pessoal");
+      fillMoneyGroup(current.contas || [], "conta");
+      setEntregaImportada(Number(current.totalEntregas || 0), Number(current.pedidosImportados || 0));
+    }
+
+    if(oldSnapshot) subtractSnapshot(oldSnapshot);
+
+    const dataBr = isoToBr(dataIso);
+    const pedidosSnap = await getDocs(query(collection(dbFS,'pedidos')));
+    const ativos = pedidosSnap.docs
+      .map(d => ({id:d.id, ...d.data()}))
+      .filter(p => {
+        if(p.deleted) return false;
+        const ativo = ['Pago','Preparando','Entregue'].includes(p.status);
+        if(!ativo) return false;
+        const ehFiado = p.pagamento === 'Fiado' || p.fiado;
+        if(ehFiado){
+          return (p.recebidoEmISO || '') === dataIso;
+        }
+        return p.data === dataBr;
+      });
+
+    const newSnapshot = {};
+    let encontrados = 0;
+    let entregaTotal = 0;
+
+    ativos.forEach(p => {
+      entregaTotal += Number(p.entrega || 0);
+      const itens = Array.isArray(p.itensCodigo) && p.itensCodigo.length ? p.itensCodigo : null;
+      if(itens && itens.length){
+        itens.forEach(item => {
+          const mapped = mapCodeNameToKey(item.nome, Number(item.quantidade||0), Number(item.valorUnitario||0));
+          if(mapped){
+            encontrados++;
+            if(!newSnapshot[mapped.key]) newSnapshot[mapped.key] = {qty:0, unit: mapped.unit};
+            newSnapshot[mapped.key].qty += mapped.qty;
+            if(!(newSnapshot[mapped.key].unit > 0)) newSnapshot[mapped.key].unit = mapped.unit;
+          }
+        });
+      }else{
+        const parsed = parsePedido(p.pedido, Number(p.valorProdutos || p.valor || 0), p.codigos || '');
+        if(parsed){
+          encontrados++;
+          if(!newSnapshot[parsed.key]) newSnapshot[parsed.key] = {qty:0, unit: parsed.unit};
+          newSnapshot[parsed.key].qty += parsed.qty;
+          if(!(newSnapshot[parsed.key].unit > 0)) newSnapshot[parsed.key].unit = parsed.unit;
+        }
+      }
+    });
+
+    applySnapshot(newSnapshot);
+    setEntregaImportada(entregaTotal, ativos.length);
+
+    const resumoDados = calcularTudo();
+    const payload = {
+      data: dataIso,
+      produtos: {
+        copo: collectGroup(produtos.copo,"copo"),
+        garrafa: collectGroup(produtos.garrafa,"garrafa"),
+        bebidas: collectGroup(produtos.bebidas,"bebida"),
+        pasteis: collectGroup(produtos.pasteis,"pastel"),
+        combos: collectGroup(produtos.combos,"combo")
+      },
+      estoqueCompras: collectMoneyGroup(estoqueCompras,"estoque"),
+      despesasOperacionais: collectMoneyGroup(operacional,"op"),
+      despesasPessoais: collectMoneyGroup(pessoal,"pessoal"),
+      despesas: collectMoneyGroup(operacional,"op"),
+      contas: collectMoneyGroup(contas,"conta"),
+      totalProdutos: resumoDados.totalProdutos,
+      totalEntregas: resumoDados.totalEntregas,
+      totalRecebido: resumoDados.totalRecebido,
+      totalEstoque: resumoDados.totalEstoque,
+      totalOperacional: resumoDados.totalOperacional,
+      totalPessoal: resumoDados.totalPessoal,
+      totalContas: resumoDados.totalContas,
+      saldoDia: resumoDados.saldoDia,
+      lucroOperacional: resumoDados.lucroOperacional,
+      metaBatida: resumoDados.metaBatida,
+      pedidosImportados: ativos.length,
+      importedSnapshot: newSnapshot,
+      updatedAt: serverTimestamp()
+    };
+
+    await setDoc(docRef, payload, {merge:true});
+    cloudHistory[dataIso] = { ...(cloudHistory[dataIso]||{}), ...payload };
+    renderHistorico();
+    calcularTudo();
+
+    if(encontrados === 0 && ativos.length === 0){
+      alert("Nenhum pedido recebido encontrado nessa data para sincronizar.");
+    } else {
+      alert(`${ativos.length} pedido(s) sincronizado(s) com o caixa.`);
+    }
+  }catch(e){
+    console.error(e);
+    alert("Não foi possível sincronizar os pedidos pagos.");
+  }
+}
+
+async function salvarFechamento(){
+  const data = document.getElementById("data").value;
+  if(!data) return alert("Escolha uma data.");
+
+  const docRef = doc(dbFS,"caixa_fechamentos",data);
+  const snap = await getDoc(docRef);
+  const existingData = snap.exists() ? snap.data() : {};
+  const importedSnapshot = existingData.importedSnapshot || {};
+  const pedidosImportados = snap.exists() ? Number(existingData.pedidosImportados || 0) : Number(document.getElementById('pedidosImportadosView').textContent || 0);
+  const pagamentosRegistrados = existingData.pagamentosRegistrados || [];
+
+  const resumoDados = calcularTudo();
+  const payload = {
+    data,
+    produtos:{
+      copo:collectGroup(produtos.copo,"copo"),
+      garrafa:collectGroup(produtos.garrafa,"garrafa"),
+      bebidas:collectGroup(produtos.bebidas,"bebida"),
+      pasteis:collectGroup(produtos.pasteis,"pastel"),
+      combos:collectGroup(produtos.combos,"combo")
+    },
+    estoqueCompras: collectMoneyGroup(estoqueCompras,"estoque"),
+    despesasOperacionais: collectMoneyGroup(operacional,"op"),
+    despesasPessoais: collectMoneyGroup(pessoal,"pessoal"),
+    despesas: collectMoneyGroup(operacional,"op"),
+    contas: collectMoneyGroup(contas,"conta"),
+    totalProdutos:resumoDados.totalProdutos,
+    totalEntregas:resumoDados.totalEntregas,
+    totalRecebido:resumoDados.totalRecebido,
+    totalEstoque:resumoDados.totalEstoque,
+    totalOperacional:resumoDados.totalOperacional,
+    totalPessoal:resumoDados.totalPessoal,
+    totalContas:resumoDados.totalContas,
+    lucroOperacional:resumoDados.lucroOperacional,
+    saldoDia:resumoDados.saldoDia,
+    metaBatida:resumoDados.metaBatida,
+    pedidosImportados,
+    importedSnapshot,
+    pagamentosRegistrados,
+    updatedAt: serverTimestamp()
+  };
+
+  await setDoc(docRef, payload, {merge:true});
+
+  cloudHistory[data] = { ...(cloudHistory[data]||{}), ...payload };
+  localStorage.setItem("acaiistel_caixa_diario_v1", JSON.stringify(cloudHistory));
+  window.dispatchEvent(new Event('storage'));
+
+  renderHistorico();
+  calcularTudo();
+  alert("Fechamento salvo na nuvem e no cache local.");
+}
+
+async function buscarPorData(){
+  const data=document.getElementById("data").value;
+  if(!data) return alert("Escolha uma data.");
+  const snap = await getDoc(doc(dbFS,"caixa_fechamentos",data));
+  if(!snap.exists()) return alert("Nenhum fechamento encontrado nessa data.");
+  const item = snap.data();
+  clearForm(true);
+  fillGroup(item.produtos?.copo || [], "copo");
+  fillGroup(item.produtos?.garrafa || [], "garrafa");
+  fillGroup(item.produtos?.bebidas || [], "bebida");
+  fillGroup(item.produtos?.pasteis || [], "pastel");
+  fillGroup(item.produtos?.combos || [], "combo");
+  fillMoneyGroup(item.estoqueCompras || [], "estoque");
+  fillMoneyGroup(item.despesasOperacionais || item.despesas || [], "op");
+  fillMoneyGroup(item.despesasPessoais || [], "pessoal");
+  fillMoneyGroup(item.contas || [], "conta");
+  setEntregaImportada(Number(item.totalEntregas || 0), Number(item.pedidosImportados || 0));
+  calcularTudo();
+}
+async function loadCloudHistory(){
+  const snap = await getDocs(collection(dbFS,"caixa_fechamentos"));
+  cloudHistory = {};
+  snap.forEach(d => { cloudHistory[d.id] = d.data(); });
+  renderHistorico();
+  calcularTudo();
+}
+async function abrirHistorico(data){
+  document.getElementById("data").value = data;
+  document.getElementById("mesAtual").value = data.slice(0,7);
+  activeMonth = data.slice(0,7);
+  updateMonthInputs();
+  calcularPeriodo();
+  await buscarPorData();
+}
+function renderHistorico(){
+  const body = document.getElementById("historicoBody");
+  const range = monthRange(selectedMonth());
+  const keys = Object.keys(cloudHistory).filter(data => data >= range.inicio && data <= range.fim).sort().reverse();
+  if(!keys.length){ body.innerHTML = `<tr><td colspan="8" class="empty">Nenhum fechamento salvo neste mês.</td></tr>`; return; }
+  body.innerHTML = keys.map(data => {
+    const item = cloudHistory[data];
+    const recebido = Number(item.totalRecebido || item.totalVendido || 0);
+    return `<tr><td>${isoToBr(data)}</td><td>${br(recebido)}</td><td>${br(item.totalEstoque || 0)}</td><td>${br(item.totalOperacional || item.totalDespesas || 0)}</td><td>${br(item.totalPessoal || 0)}</td><td>${br(item.totalContas || 0)}</td><td>${br(item.saldoDia)}</td><td><span style="color:var(--gold);cursor:pointer;text-decoration:underline" onclick="abrirHistorico('${data}')">Abrir</span></td></tr>`;
+  }).join("");
+}
+
+window.addEventListener('storage', (e) => {
+  if (e.key === "acaiistel_caixa_diario_v1" || e.key === null) {
+    const raw = localStorage.getItem("acaiistel_caixa_diario_v1");
+    if (raw) {
+      cloudHistory = JSON.parse(raw);
+      renderHistorico();
+      calcularTudo();
+    }
+  }
+});
+
+async function garantirSincronizacaoDados(){
+  try{
+    const snap = await getDocs(collection(dbFS,"caixa_fechamentos"));
+    snap.forEach(d => { cloudHistory[d.id] = d.data(); });
+    localStorage.setItem("acaiistel_caixa_diario_v1", JSON.stringify(cloudHistory));
+    renderHistorico();
+    calcularTudo();
+  } catch(e) { console.error("Erro ao sincronizar Firestore no carregamento:", e); }
+}
+garantirSincronizacaoDados();
+
+function calcularPeriodo(){
+  const ini=document.getElementById("periodoInicio").value;
+  const fim=document.getElementById("periodoFim").value;
+  if(!ini || !fim) return;
+
+  const rows = Object.keys(cloudHistory).filter(d => d>=ini && d<=fim).sort();
+  let recebido=0,est=0,op=0,pes=0,cont=0,saldo=0;
+  rows.forEach(d=>{
+    const item=cloudHistory[d];
+    recebido += Number(item.totalRecebido || item.totalVendido || 0);
+    est += Number(item.totalEstoque || 0);
+    op += Number(item.totalOperacional || item.totalDespesas || 0);
+    pes += Number(item.totalPessoal || 0);
+    cont += Number(item.totalContas || 0);
+    saldo += Number(item.saldoDia || 0);
+  });
+  document.getElementById("pVendido").textContent=br(recebido);
+  document.getElementById("pEstoque").textContent=br(est);
+  document.getElementById("pOperacional").textContent=br(op);
+  document.getElementById("pPessoal").textContent=br(pes);
+  document.getElementById("pContas").textContent=br(cont);
+  document.getElementById("pSaldo").textContent=br(saldo);
+}
+
+async function resumoPagamentosDoDia(dataIso){
+  const dataBr = isoToBr(dataIso);
+  const base = {Pix:0, Dinheiro:0, Cartão:0, Outros:0, FiadoRecebido:0, quantidade:0};
+  try{
+    const snap = await getDocs(collection(dbFS,'pedidos'));
+    snap.docs.map(d => ({id:d.id, ...d.data()})).forEach(p => {
+      if(p.deleted) return;
+      const ativo = ['Pago','Preparando','Entregue'].includes(p.status);
+      if(!ativo) return;
+      const ehFiado = p.pagamento === 'Fiado' || p.fiado;
+      const total = Number(p.valorProdutos || p.valor || 0) + Number(p.entrega || 0);
+      if(ehFiado){
+        if((p.recebidoEmISO || '') !== dataIso) return;
+        const forma = String(p.pagamentoRecebido || 'Outros').trim();
+        if(forma === 'Pix') base.Pix += total;
+        else if(forma === 'Dinheiro') base.Dinheiro += total;
+        else if(forma === 'Cartão') base.Cartão += total;
+        else base.Outros += total;
+        base.FiadoRecebido += total;
+        base.quantidade += 1;
+      }else{
+        if(p.data !== dataBr) return;
+        const forma = String(p.pagamento || 'Outros').trim();
+        if(forma === 'Pix') base.Pix += total;
+        else if(forma === 'Dinheiro') base.Dinheiro += total;
+        else if(forma === 'Cartão') base.Cartão += total;
+        else base.Outros += total;
+        base.quantidade += 1;
+      }
+    });
+  }catch(e){
+    console.error(e);
+  }
+  return base;
+}
+function reportRowsMoney(items){
+  return (items || []).filter(i => Number(i.valor || 0) > 0).map(i => `
+    <tr>
+      <td>${i.nome}</td>
+      <td class="num">${br(i.valor)}</td>
+    </tr>
+  `).join('') || `<tr><td colspan="2">Sem lançamentos</td></tr>`;
+}
+function reportRowsProdutos(grupo){
+  return (grupo || []).filter(i => Number(i.quantidade || 0) > 0 || Number(i.valor || 0) > 0).map(i => `
+    <tr>
+      <td>${i.nome}</td>
+      <td class="num">${Number(i.quantidade || 0)}</td>
+      <td class="num">${br(i.valor || 0)}</td>
+      <td class="num">${br((Number(i.quantidade || 0) * Number(i.valor || 0)))}</td>
+    </tr>
+  `).join('') || `<tr><td colspan="4">Sem movimentação</td></tr>`;
+}
+async function gerarRelatorioDiario(){
+  const data = document.getElementById("data").value;
+  if(!data) return alert("Escolha uma data.");
+  const snap = await getDoc(doc(dbFS,"caixa_fechamentos",data));
+  const item = snap.exists() ? snap.data() : {
+    data,
+    produtos:{
+      copo:collectGroup(produtos.copo,"copo"),
+      garrafa:collectGroup(produtos.garrafa,"garrafa"),
+      bebidas:collectGroup(produtos.bebidas,"bebida"),
+      pasteis:collectGroup(produtos.pasteis,"pastel"),
+      combos:collectGroup(produtos.combos,"combo")
+    },
+    estoqueCompras: collectMoneyGroup(estoqueCompras,"estoque"),
+    despesasOperacionais: collectMoneyGroup(operacional,"op"),
+    despesasPessoais: collectMoneyGroup(pessoal,"pessoal"),
+    contas: collectMoneyGroup(contas,"conta"),
+    ...calcularTudo()
+  };
+  const pagamentos = await resumoPagamentosDoDia(data);
+  const html = `<!DOCTYPE html>
+  <html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8">
+    <title>Relatório diário - ${isoToBr(data)}</title>
+    <style>
+      body{font-family:Arial,sans-serif;color:#222;margin:24px;background:#fff}
+      h1,h2{margin:0 0 10px}
+      .muted{color:#666}
+      .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0 22px}
+      .box{border:1px solid #ddd;border-radius:12px;padding:14px}
+      table{width:100%;border-collapse:collapse;margin:8px 0 18px}
+      th,td{border:1px solid #ddd;padding:8px;text-align:left}
+      th{background:#f7f7f7}
+      .num{text-align:right}
+      .section{margin-top:18px}
+      .footer{margin-top:24px;font-size:12px;color:#666}
+      @media print{ body{margin:10mm} .no-print{display:none} }
+    </style>
+  </head>
+  <body>
+    <h1>Relatório diário de caixa</h1>
+    <div class="muted">Data: ${isoToBr(data)} • Fechamento organizado para conferência interna e impressão</div>
+
+    <div class="grid">
+      <div class="box"><b>Produtos vendidos</b><br>${br(item.totalProdutos || 0)}</div>
+      <div class="box"><b>Entregas</b><br>${br(item.totalEntregas || 0)}</div>
+      <div class="box"><b>Total recebido</b><br>${br(item.totalRecebido || 0)}</div>
+      <div class="box"><b>Compra de estoque</b><br>${br(item.totalEstoque || 0)}</div>
+      <div class="box"><b>Operacional</b><br>${br(item.totalOperacional || 0)}</div>
+      <div class="box"><b>Pessoal</b><br>${br(item.totalPessoal || 0)}</div>
+      <div class="box"><b>Contas fixas</b><br>${br(item.totalContas || 0)}</div>
+      <div class="box"><b>Lucro operacional</b><br>${br(item.lucroOperacional || 0)}</div>
+      <div class="box"><b>Saldo do dia</b><br>${br(item.saldoDia || 0)}</div>
+    </div>
+
+    <div class="section">
+      <h2>Recebimentos por forma</h2>
+      <table>
+        <thead><tr><th>Forma</th><th class="num">Valor</th></tr></thead>
+        <tbody>
+          <tr><td>Pix</td><td class="num">${br(pagamentos.Pix)}</td></tr>
+          <tr><td>Dinheiro</td><td class="num">${br(pagamentos.Dinheiro)}</td></tr>
+          <tr><td>Cartão</td><td class="num">${br(pagamentos.Cartão)}</td></tr>
+          <tr><td>Outros</td><td class="num">${br(pagamentos.Outros)}</td></tr>
+          <tr><td><b>Fiado recebido no dia</b></td><td class="num"><b>${br(pagamentos.FiadoRecebido)}</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <h2>Produtos vendidos</h2>
+      <h3>Açaí­ no copo</h3>
+      <table><thead><tr><th>Produto</th><th class="num">Qtd</th><th class="num">Unitário</th><th class="num">Total</th></tr></thead><tbody>${reportRowsProdutos(item.produtos?.copo)}</tbody></table>
+      <h3>Açaí­ na garrafa</h3>
+      <table><thead><tr><th>Produto</th><th class="num">Qtd</th><th class="num">Unitário</th><th class="num">Total</th></tr></thead><tbody>${reportRowsProdutos(item.produtos?.garrafa)}</tbody></table>
+      <h3>Bebidas</h3>
+      <table><thead><tr><th>Produto</th><th class="num">Qtd</th><th class="num">Unitário</th><th class="num">Total</th></tr></thead><tbody>${reportRowsProdutos(item.produtos?.bebidas)}</tbody></table>
+      <h3>Pastéis</h3>
+      <table><thead><tr><th>Produto</th><th class="num">Qtd</th><th class="num">Unitário</th><th class="num">Total</th></tr></thead><tbody>${reportRowsProdutos(item.produtos?.pasteis)}</tbody></table>
+      <h3>Combos</h3>
+      <table><thead><tr><th>Produto</th><th class="num">Qtd</th><th class="num">Unitário</th><th class="num">Total</th></tr></thead><tbody>${reportRowsProdutos(item.produtos?.combos)}</tbody></table>
+    </div>
+
+    <div class="section">
+      <h2>Saídas separadas</h2>
+      <h3>Compras de estoque</h3>
+      <table><thead><tr><th>Tipo</th><th class="num">Valor</th></tr></thead><tbody>${reportRowsMoney(item.estoqueCompras)}</tbody></table>
+      <h3>Despesas operacionais</h3>
+      <table><thead><tr><th>Tipo</th><th class="num">Valor</th></tr></thead><tbody>${reportRowsMoney(item.despesasOperacionais || item.despesas)}</tbody></table>
+      <h3>Despesas pessoais</h3>
+      <table><thead><tr><th>Tipo</th><th class="num">Valor</th></tr></thead><tbody>${reportRowsMoney(item.despesasPessoais)}</tbody></table>
+      <h3>Contas fixas do negócio</h3>
+      <table><thead><tr><th>Tipo</th><th class="num">Valor</th></tr></thead><tbody>${reportRowsMoney(item.contas)}</tbody></table>
+    </div>
+
+    <div class="footer">
+      Relatório gerado em ${new Date().toLocaleString('pt-BR')}. Use este fechamento para conferência interna. Para exigências fiscais formais, confirme com seu contador.
+    </div>
+    <div class="no-print" style="margin-top:18px">
+      <button onclick="window.print()">Imprimir / Salvar em PDF</button>
+    </div>
+  </body>
+  </html>`;
+  const w = window.open('', '_blank');
+  if(!w) return alert('Seu navegador bloqueou a abertura do relatório. Libere pop-ups e tente novamente.');
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+}
+
+async function migrarHistoricoLocal(){
+  const old = JSON.parse(localStorage.getItem(OLD_STORAGE_KEY) || "{}");
+  const datas = Object.keys(old);
+  if(!datas.length) return alert("Nenhum histórico local encontrado neste aparelho.");
+  for(const data of datas){ await setDoc(doc(dbFS,"caixa_fechamentos",data), old[data], {merge:true}); }
+  await loadCloudHistory();
+  alert(`${datas.length} fechamento(s) local(is) migrado(s) para a nuvem.`);
+}
+
+document.getElementById("syncBtn").addEventListener("click", syncPedidosPagos);
+document.getElementById("salvarBtn").addEventListener("click", salvarFechamento);
+document.getElementById("relatorioBtn").addEventListener("click", gerarRelatorioDiario);
+document.getElementById("relatorioMensalBtn").addEventListener("click", gerarRelatorioMensal);
+document.getElementById("fecharMesBtn").addEventListener("click", mudarMes);
+document.getElementById("buscarBtn").addEventListener("click", buscarPorData);
+document.getElementById("migrateBtn").addEventListener("click", migrarHistoricoLocal);
+document.getElementById("periodoBtn").addEventListener("click", calcularPeriodo);
+document.getElementById("centralFinBtn")?.addEventListener("click", ()=> location.href = "central-financeira.html");
+window.abrirHistorico = abrirHistorico;
+await loadConfig();
+await loadCloudHistory();
+document.getElementById("mesAtual").addEventListener("change", calcularPeriodo);
+document.getElementById("data").addEventListener("change", async () => {
+  const d = document.getElementById("data").value;
+  if(!d) return;
+  document.getElementById("mesAtual").value = d.slice(0,7);
+  activeMonth = d.slice(0,7);
+  updateMonthInputs();
+  calcularPeriodo();
+  const snap = await getDoc(doc(dbFS,"caixa_fechamentos",d));
+  if(snap.exists()){
+    await buscarPorData();
+  }else{
+    clearForm(true);
+    renderHistorico();
+  }
+});
+calcularPeriodo();
+calcularTudo();
+</script>
+</body>
+</html>
+
+
+

@@ -1,0 +1,281 @@
+DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compras Inteligentes Açaí­stel</title>
+<style>
+:root{--bg:#2b0148;--card:#5c0097;--card2:#6d12ad;--gold:#ffd54a;--green:#18c46b;--red:#ff5c5c;--text:#fff;--muted:#ead9ff;--line:rgba(255,255,255,.16)}
+*{box-sizing:border-box} body{margin:0;font-family:Arial,sans-serif;background:linear-gradient(180deg,var(--bg),#210038);color:var(--text)}
+.top{padding:24px 16px 10px;text-align:center}.top h1{margin:0;font-size:40px;font-weight:800}.top p{margin:8px 0 0;color:var(--muted);font-size:17px}
+.wrap{max-width:1280px;margin:0 auto;padding:12px 16px 40px}.card{background:linear-gradient(180deg,var(--card),var(--card2));border-radius:24px;padding:20px;margin-bottom:18px;border:1px solid var(--line);box-shadow:0 16px 40px rgba(0,0,0,.24)}
+.grid{display:grid;gap:14px}.grid-4{grid-template-columns:repeat(4,minmax(0,1fr))}.grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}.grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.metric{background:rgba(255,255,255,.08);border:1px solid var(--line);border-radius:18px;padding:16px}.metric .t{color:var(--muted);font-size:14px}.metric .v{font-size:26px;font-weight:800;margin-top:6px}
+label{display:block;font-size:14px;color:var(--muted);margin-bottom:6px} input,button,select{font:inherit;border:none;outline:none}.field,.select{width:100%;padding:13px 14px;border-radius:14px;background:#fff;color:#2b0148}
+.btn{border:none;border-radius:14px;padding:13px 16px;font-weight:700;cursor:pointer}.btn.primary{background:var(--gold);color:#442b00}.btn.secondary{background:#fff;color:#4a007d}.btn.success{background:var(--green);color:#fff}
+.table{width:100%;border-collapse:collapse}.table th,.table td{padding:10px;border-bottom:1px solid var(--line);text-align:left}.table th{color:var(--muted)} .right{text-align:right}
+.tip{margin-top:10px;color:var(--muted);font-size:14px;line-height:1.45}.tag{display:inline-block;padding:8px 12px;border-radius:999px;background:rgba(255,213,74,.14);border:1px solid rgba(255,213,74,.28);color:var(--gold);font-weight:700;font-size:13px}
+.alert{background:rgba(255,255,255,.08);border:1px solid var(--line);border-radius:18px;padding:16px;margin-top:12px;line-height:1.45}
+@media (max-width:980px){.grid-4,.grid-3,.grid-2{grid-template-columns:1fr 1fr}}
+@media (max-width:680px){.grid-4,.grid-3,.grid-2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="top">
+  <h1>Compras Inteligentes</h1>
+  <p>Lista automática da semana com base nas vendas recentes e no seu padrão de operação.</p>
+</div>
+<div class="wrap">
+  <div class="card">
+    <div class="grid grid-4">
+      <div><label>Final da análise</label><input id="dataRef" class="field" type="date"></div>
+      <div><label>Janela de dias</label><input id="janelaDias" class="field" type="number" min="3" max="14" value="7"></div>
+      <div><label>Modo da semana</label><select id="modoSemana" class="select"><option value="auto">Automático</option><option value="fraca">Semana fraca</option><option value="forte">Semana forte</option></select></div>
+      <div style="display:flex;align-items:end;gap:10px"><button id="gerarBtn" class="btn primary" style="width:100%">Gerar lista da semana</button></div>
+    </div>
+    <div class="tip">O sistema usa os pedidos dos ÃƒÂºltimos dias para sugerir a compra da semana. Depois você pode ajustar antes de confirmar.</div>
+  </div>
+
+  <div class="grid grid-4">
+    <div class="metric"><div class="t">Recebido na janela</div><div id="mRecebido" class="v">R$ 0,00</div></div>
+    <div class="metric"><div class="t">Pedidos pagos</div><div id="mPedidos" class="v">0</div></div>
+    <div class="metric"><div class="t">Açaí­s vendidos</div><div id="mAcais" class="v">0</div></div>
+    <div class="metric"><div class="t">Compra sugerida</div><div id="mCompra" class="v">R$ 0,00</div></div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap">
+      <div>
+        <h2 style="margin:0 0 6px">Lista da semana</h2>
+        <span class="tag" id="periodoTag">Aguardando análise</span>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button id="usarPadraoBtn" class="btn secondary">Aplicar padrão sugerido</button>
+        <button id="confirmarBtn" class="btn success">Confirmar compra e enviar ao caixa</button>
+      </div>
+    </div>
+    <table class="table" style="margin-top:14px">
+      <thead><tr><th>Item</th><th>Sugestão</th><th class="right">Ajuste</th></tr></thead>
+      <tbody id="listaBody"></tbody>
+    </table>
+    <div class="alert" id="alertaCompra">Gere a lista para ver a sugestão da semana.</div>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <h2 style="margin-top:0">Resumo por grupo</h2>
+      <table class="table">
+        <tbody>
+          <tr><td>Açaí­ base</td><td class="right" id="resAcai">R$ 0,00</td></tr>
+          <tr><td>Embalagens</td><td class="right" id="resEmbalagens">R$ 0,00</td></tr>
+          <tr><td>Complementos e cremes</td><td class="right" id="resComplementos">R$ 0,00</td></tr>
+          <tr><td>Pastel / lanches</td><td class="right" id="resPastel">R$ 0,00</td></tr>
+          <tr><td><b>Total da compra</b></td><td class="right"><b id="resTotal">R$ 0,00</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h2 style="margin-top:0">SugestÃƒÂµes extras</h2>
+      <div class="alert" id="insightsBox">Sem dados ainda.</div>
+      <div class="tip">Meu conselho fixo para você: deixar o açaí como compra base de sábado e usar o restante da lista para ajustar copos, tampas, colheres, queijo, presunto e complementos conforme o giro.</div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, getDocs, query, orderBy, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBu1hRG2tXqnpZC0aMwADIeHDI4CdOEDCc",
+  authDomain: "raspadinha-atualizada.firebaseapp.com",
+  projectId: "raspadinha-atualizada",
+  storageBucket: "raspadinha-atualizada.firebasestorage.app",
+  messagingSenderId: "287257624054",
+  appId: "1:287257624054:web:79639f835cff59bdb51bd7",
+  measurementId: "G-29CLHSR79B"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const CONFIG_PATH = ['configuracoes','painel_admin_v1'];
+const PENDING_KEY = 'acaiistel_pending_compra_v1';
+const DEFAULTS = {
+  precoAcaiSemanaBase:650,
+  contasProgramadas:[
+    {nome:'Aluguel',valor:0,dia:10,categoria:'conta'},
+    {nome:'Energia',valor:0,dia:20,categoria:'conta'},
+    {nome:'Internet',valor:0,dia:20,categoria:'conta'},
+    {nome:'Moto',valor:600,dia:20,categoria:'conta'},
+    {nome:'Mapec',valor:800,dia:20,categoria:'investimento'}
+  ]
+};
+let config = DEFAULTS;
+let currentData = null;
+
+function br(v){ return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
+function hojeISO(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function addDays(iso,days){ const d=new Date(iso+'T12:00:00'); d.setDate(d.getDate()+days); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function normalizeText(t){ return String(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+function getPedidoDate(p){ return p.data || p.dataLancamento || p.createdDate || (p.createdAt?.toDate ? p.createdAt.toDate().toISOString().slice(0,10) : null) || null; }
+function isPago(p){ const s=normalizeText(p.status || p.pagamento || ''); return s.includes('pago') || normalizeText(p.pagamento||'')==='pix' || normalizeText(p.pagamento||'')==='dinheiro' || normalizeText(p.pagamento||'')==='cartao' || normalizeText(p.pagamento||'')==='cartão'; }
+
+async function loadConfig(){
+  try{
+    const snap = await getDoc(doc(db,...CONFIG_PATH));
+    if(snap.exists()) config = {...DEFAULTS, ...snap.data()};
+  }catch(e){ console.error(e); }
+}
+
+function listTemplate(){
+  return [
+    {key:'acai', item:'Açaí­ base da semana', sugestao:'R$ 650,00', valor:650, grupo:'acai'},
+    {key:'copos500', item:'Copos 500ml', sugestao:'110 un', valor:0, grupo:'embalagens'},
+    {key:'copos300', item:'Copos 300ml', sugestao:'35 un', valor:0, grupo:'embalagens'},
+    {key:'copos400', item:'Copos 400ml', sugestao:'25 un', valor:0, grupo:'embalagens'},
+    {key:'copos700', item:'Copos 700ml', sugestao:'15 un', valor:0, grupo:'embalagens'},
+    {key:'tampas', item:'Tampas', sugestao:'210 un', valor:0, grupo:'embalagens'},
+    {key:'colheres', item:'Colheres', sugestao:'250 un', valor:0, grupo:'embalagens'},
+    {key:'sacolas', item:'Sacolas', sugestao:'130 un', valor:0, grupo:'embalagens'},
+    {key:'queijo', item:'Queijo em barra', sugestao:'3 kg', valor:0, grupo:'pastel'},
+    {key:'presunto', item:'Presunto peça / barra', sugestao:'2 kg', valor:0, grupo:'pastel'},
+    {key:'massa', item:'Massa de pastel', sugestao:'100 un', valor:0, grupo:'pastel'},
+    {key:'cremes', item:'Cremes e complementos', sugestao:'R$ 180,00', valor:180, grupo:'complementos'},
+    {key:'embalagensValor', item:'Embalagens extras', sugestao:'R$ 110,00', valor:110, grupo:'embalagens'}
+  ];
+}
+
+function parseCodigos(codigos=''){
+  const items=[];
+  String(codigos).split('+').map(s=>s.trim()).filter(Boolean).forEach(part=>{
+    const m = part.match(/^(\d+)x(\d+)$/i) || part.match(/^(\d+)\s*x\s*(\d+)$/i);
+    if(m) items.push({qty:Number(m[1]), code:String(m[2])});
+    else if(/^\d+$/.test(part)) items.push({qty:1, code:String(part)});
+  });
+  return items;
+}
+
+async function loadPedidosWindow(refIso,janela){
+  const snap = await getDocs(query(collection(db,'pedidos'), orderBy('createdAt','desc')));
+  const ini = addDays(refIso, -(janela-1));
+  const pedidos = [];
+  snap.forEach(docu=>{ const p={id:docu.id, ...docu.data()}; const data=getPedidoDate(p); if(data && data >= ini && data <= refIso && isPago(p)) pedidos.push(p); });
+  return pedidos;
+}
+
+function buildData(pedidos, modo='auto'){
+  const totalRecebido = pedidos.reduce((s,p)=>s + Number(p.total || (Number(p.valor||0)+Number(p.entrega||0)) || 0), 0);
+  const totalPedidos = pedidos.length;
+  const count = {250:0,300:0,400:0,500:0,700:0,pastel:0,refri:0};
+  pedidos.forEach(p=>{
+    parseCodigos(p.codigos || '').forEach(x=>{
+      if(x.code==='11') count[250]+=x.qty;
+      if(x.code==='1') count[300]+=x.qty;
+      if(x.code==='2') count[400]+=x.qty;
+      if(x.code==='3') count[500]+=x.qty;
+      if(x.code==='4') count[700]+=x.qty;
+      if(x.code==='5') count.pastel+=x.qty;
+      if(x.code==='6' || x.code==='7') count.refri+=x.qty;
+    });
+    const txt = normalizeText(p.pedido || '');
+    if(txt.includes('pastel')) count.pastel += 1;
+  });
+  const totalAcais = count[250]+count[300]+count[400]+count[500]+count[700];
+  let fator = 1;
+  if(modo==='fraca') fator = 0.9;
+  if(modo==='forte') fator = 1.12;
+  if(modo==='auto'){
+    if(totalRecebido >= 3500) fator = 1.1;
+    else if(totalRecebido <= 2200) fator = 0.92;
+  }
+  const acaiSugerido = Math.max(500, Math.min(800, Math.round(((config.precoAcaiSemanaBase||650) * fator) / 10) * 10));
+  const embalagensValor = Math.round(Math.max(90, totalAcais * 1.35));
+  const complementosValor = Math.round(Math.max(140, totalAcais * 2.1));
+  const pastelValor = count.pastel > 0 ? Math.round(Math.max(90, count.pastel * 2.6)) : 0;
+  const list = listTemplate();
+  const byKey = {acai:acaiSugerido, cremes:complementosValor, embalagensValor:embalagensValor};
+  list.forEach(item=>{ if(byKey[item.key] != null){ item.valor = byKey[item.key]; item.sugestao = item.key==='acai'||item.key==='cremes'||item.key==='embalagensValor' ? br(byKey[item.key]) : item.sugestao; }});
+  const setQty=(key,qty,suffix=' un')=>{ const it=list.find(x=>x.key===key); if(it) it.sugestao = `${Math.max(0, Math.round(qty*fator))}${suffix}`; };
+  setQty('copos500', Math.max(70, count[500] + 20));
+  setQty('copos300', Math.max(20, count[300] + 8));
+  setQty('copos400', Math.max(12, count[400] + 6));
+  setQty('copos700', Math.max(10, count[700] + 4));
+  setQty('tampas', Math.max(130, totalAcais + 30));
+  setQty('colheres', Math.max(160, totalAcais + 45));
+  setQty('sacolas', Math.max(80, totalPedidos + 25));
+  const queijoKg = Math.max(2.5, (count.pastel * 0.09) + 1.8);
+  const presKg = Math.max(1.8, (count.pastel * 0.06) + 1.2);
+  const massaUn = Math.max(50, count.pastel + 35);
+  list.find(x=>x.key==='queijo').sugestao = `${queijoKg.toFixed(1).replace('.',',')} kg`;
+  list.find(x=>x.key==='presunto').sugestao = `${presKg.toFixed(1).replace('.',',')} kg`;
+  list.find(x=>x.key==='massa').sugestao = `${Math.round(massaUn*fator)} un`;
+  const totalSugerido = acaiSugerido + embalagensValor + complementosValor + pastelValor;
+  const insights = [];
+  if(totalRecebido < 2500) insights.push('Semana mais fraca: mantenha compra mais enxuta e foque no sábado e domingo.');
+  if(totalRecebido >= 3500) insights.push('Semana forte: pode subir um pouco a compra de açaí e embalagens sem apertar o caixa.');
+  if(count[500] >= count[300] && count[500] >= count[400] && count[500] >= count[700]) insights.push('O 500ml segue como produto líder. Priorize copos, tampas e colher para esse tamanho.');
+  if(count.pastel > 12) insights.push('Pastel teve bom giro. Voltar para queijo e presunto em barra faz sentido para baixar custo.');
+  const contas20 = (config.contasProgramadas||[]).filter(c => Number(c.dia)===20).reduce((s,c)=>s+Number(c.valor||0),0);
+  if(contas20 > 0) insights.push(`Lembrete: no dia 20 você já precisa estar com ${br(contas20)} separado para contas programadas.`);
+  return {totalRecebido,totalPedidos,totalAcais,totalSugerido,list,totais:{acai:acaiSugerido,embalagens:embalagensValor,complementos:complementosValor,pastel:pastelValor,total:totalSugerido},insights};
+}
+
+function renderData(data, refIso, janela){
+  currentData = data;
+  document.getElementById('mRecebido').textContent = br(data.totalRecebido);
+  document.getElementById('mPedidos').textContent = String(data.totalPedidos);
+  document.getElementById('mAcais').textContent = String(data.totalAcais);
+  document.getElementById('mCompra').textContent = br(data.totalSugerido);
+  document.getElementById('periodoTag').textContent = `Janela: ${addDays(refIso, -(janela-1)).split('-').reverse().join('/')} até ${refIso.split('-').reverse().join('/')}`;
+  document.getElementById('listaBody').innerHTML = data.list.map((item, idx)=>`<tr><td>${item.item}</td><td>${item.sugestao}</td><td class="right"><input class="field ajuste" data-idx="${idx}" value="${item.sugestao}" style="max-width:180px;display:inline-block"></td></tr>`).join('');
+  document.getElementById('resAcai').textContent = br(data.totais.acai);
+  document.getElementById('resEmbalagens').textContent = br(data.totais.embalagens);
+  document.getElementById('resComplementos').textContent = br(data.totais.complementos);
+  document.getElementById('resPastel').textContent = br(data.totais.pastel);
+  document.getElementById('resTotal').textContent = br(data.totais.total);
+  document.getElementById('alertaCompra').innerHTML = `<b>Compra sugerida:</b> ${br(data.totais.total)}. <br>Base de açaí: ${br(data.totais.acai)}. Embalagens: ${br(data.totais.embalagens)}. Complementos: ${br(data.totais.complementos)}.`;
+  document.getElementById('insightsBox').innerHTML = data.insights.length ? data.insights.map(x=>`• ${x}`).join('<br>') : 'Semana dentro do padrão. Gere a compra e confirme no caixa.';
+}
+
+function applyPadrao(){
+  if(!currentData) return;
+  document.querySelectorAll('.ajuste').forEach(inp => inp.value = currentData.list[Number(inp.dataset.idx)].sugestao);
+}
+
+function confirmCompra(){
+  if(!currentData) return alert('Gere a lista primeiro.');
+  const payload = {
+    createdAt: new Date().toISOString(),
+    dataRef: document.getElementById('dataRef').value || hojeISO(),
+    totais: currentData.totais,
+    ajustes: [...document.querySelectorAll('.ajuste')].map(inp => ({item: currentData.list[Number(inp.dataset.idx)].item, valor: inp.value})),
+    caixaResumo: {
+      reposicaoAcai: currentData.totais.acai,
+      complementos: currentData.totais.complementos,
+      embalagens: currentData.totais.embalagens,
+      outrosEstoque: currentData.totais.pastel
+    }
+  };
+  localStorage.setItem(PENDING_KEY, JSON.stringify(payload));
+  alert('Compra semanal confirmada. Ao abrir o caixa, o lançamento de estoque vai aparecer pronto para importar.');
+  window.location.href = 'caixa.html';
+}
+
+async function gerar(){
+  const refIso = document.getElementById('dataRef').value || hojeISO();
+  const janela = Number(document.getElementById('janelaDias').value || 7);
+  const modo = document.getElementById('modoSemana').value;
+  const pedidos = await loadPedidosWindow(refIso, janela);
+  const data = buildData(pedidos, modo);
+  renderData(data, refIso, janela);
+}
+
+document.getElementById('dataRef').value = hojeISO();
+document.getElementById('gerarBtn').addEventListener('click', gerar);
+document.getElementById('usarPadraoBtn').addEventListener('click', applyPadrao);
+document.getElementById('confirmarBtn').addEventListener('click', confirmCompra);
+await loadConfig();
+</script>
+</body>
+</html>
+
+

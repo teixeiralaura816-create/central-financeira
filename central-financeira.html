@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Central Financeira Executiva • Açaístel (ERP V5)</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#2b0148">
+  <style>
+    :root{--bg:#140021;--bg2:#24003d;--card:#3d0066;--card2:#520085;--gold:#ffd54a;--green:#18c46b;--red:#ff5c5c;--warn:#ffcb47;--text:#ffffff;--muted:#ead9ff;--line:rgba(255,255,255,.16);--shadow:0 20px 50px rgba(0,0,0,.45)}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;font-family:system-ui,-apple-system,sans-serif;color:var(--text);background:radial-gradient(circle at top,var(--bg2),var(--bg));padding-bottom:50px}
+    .wrap{max-width:1440px;margin:0 auto;padding:24px 20px}
+    header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;margin-bottom:24px;border-bottom:1px solid var(--line);padding-bottom:20px}
+    .brand h1{margin:0;font-size:36px;font-weight:900;letter-spacing:-0.03em}.brand h1 span{color:var(--gold)}
+    .brand p{margin:6px 0 0;color:var(--muted);font-size:15px}
+    .nav-links{display:flex;gap:10px;flex-wrap:wrap}.nav-btn{background:rgba(255,255,255,.1);color:var(--text);text-decoration:none;padding:12px 16px;border-radius:14px;font-weight:700;border:1px solid var(--line);transition:all .2s}.nav-btn:hover{background:var(--card2);border-color:var(--gold)}.nav-btn.active{background:var(--gold);color:#2b0148}
+    .dashboard-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-bottom:24px}
+    .metric-card{background:linear-gradient(135deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:22px;padding:20px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+    .metric-card::after{content:'';position:absolute;top:0;right:0;width:90px;height:90px;background:radial-gradient(circle,rgba(255,213,74,.12),transparent 70%);border-radius:0 0 0 100%}
+    .metric-num{display:inline-block;font-size:11px;font-weight:800;background:rgba(255,213,74,.2);color:var(--gold);padding:3px 8px;border-radius:99px;margin-bottom:8px}
+    .metric-title{color:var(--muted);font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px}.metric-value{font-size:26px;font-weight:900;letter-spacing:-0.02em;line-height:1.1;margin-bottom:6px}.metric-sub{font-size:12px;color:var(--muted);line-height:1.35}
+    .section-grid{display:grid;grid-template-columns:1.2fr 0.8fr;gap:20px;margin-bottom:24px}@media(max-width:1100px){.section-grid{grid-template-columns:1fr}}
+    .card{background:linear-gradient(180deg,var(--card),#2f004f);border:1px solid var(--line);border-radius:24px;padding:22px;box-shadow:var(--shadow);margin-bottom:24px}
+    .card h2{margin:0 0 16px;font-size:22px;font-weight:800;display:flex;align-items:center;gap:10px}.card h2 span{font-size:15px;color:var(--gold)}
+    .table-wrap{width:100%;overflow-x:auto}table{width:100%;border-collapse:collapse;white-space:nowrap}th,td{padding:14px 12px;border-bottom:1px solid var(--line);text-align:left;font-size:14px}th{color:var(--muted);font-weight:700;background:rgba(0,0,0,.25)}td.num,th.num{text-align:right}tr:hover td{background:rgba(255,255,255,.03)}
+    .badge{display:inline-flex;align-items:center;padding:5px 12px;border-radius:99px;font-size:12px;font-weight:700}.badge.ok{background:rgba(24,196,107,.2);color:#9effc4;border:1px solid rgba(24,196,107,.4)}.badge.warn{background:rgba(255,203,71,.2);color:#ffe58e;border:1px solid rgba(255,203,71,.4)}.badge.bad{background:rgba(255,92,92,.2);color:#ffb7b7;border:1px solid rgba(255,92,92,.4)}
+    .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;align-items:end;margin-bottom:16px}label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px;font-weight:700}
+    input,select{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:rgba(0,0,0,.3);color:var(--text);font:inherit}input:focus,select:focus{outline:none;border-color:var(--gold)}
+    .btn{background:var(--gold);color:#2b0148;border:none;border-radius:14px;padding:12px 18px;font-weight:800;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;justify-content:center;gap:8px}.btn:hover{transform:translateY(-1px);filter:brightness(1.05)}.btn.secondary{background:rgba(255,255,255,.15);color:var(--text);border:1px solid var(--line)}
+    .tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}.tab{background:rgba(255,255,255,.08);border:1px solid var(--line);color:var(--muted);padding:10px 18px;border-radius:12px;cursor:pointer;font-weight:700}.tab.active{background:var(--gold);color:#2b0148;border-color:var(--gold)}
+    .tab-content{display:none}.tab-content.active{display:block}
+  </style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="brand"><h1><span>Central</span> Financeira</h1><p>Açaístel ERP V5 • Precisão Financeira, 9 Indicadores Rigorosos, Anti-Duplicidade & Gestão de Giro.</p></div>
+  <div class="nav-links">
+    <a class="nav-btn" href="index.html">Início</a><a class="nav-btn" href="caixa.html">Caixa Diário</a><a class="nav-btn" href="controle.html">Controle</a><a class="nav-btn active" href="central-financeira.html">Central Financeira</a><a class="nav-btn" href="relatorios.html">Relatórios</a>
+  </div>
+</header>
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('dashboard')">1. Painel Financeiro (9 Indicadores)</div>
+  <div class="tab" onclick="switchTab('contas')">2. Contas a Pagar (Anti-Duplicidade)</div>
+  <div class="tab" onclick="switchTab('giro')">3. Capital de Giro Livre</div>
+  <div class="tab" onclick="switchTab('familiar')">4. Retiradas Pessoais (Família)</div>
+  <div class="tab" onclick="switchTab('cmv')">5. Estoque & CMV</div>
+  <div class="tab" onclick="switchTab('sync')">6. Arquitetura Firebase</div>
+</div>
+<div id="tab-dashboard" class="tab-content active">
+  <div class="dashboard-grid">
+    <div class="metric-card"><span class="metric-num">KPI 1</span><div class="metric-title">Saldo Disponível em Caixa</div><div class="metric-value" id="kpiSaldoDisponivel">R$ 0,00</div><div class="metric-sub">Dinheiro real apurado no caixa</div></div>
+    <div class="metric-card"><span class="metric-num">KPI 2</span><div class="metric-title">Compromissos Pendentes</div><div class="metric-value" id="kpiCompromissos" style="color:var(--warn)">R$ 0,00</div><div class="metric-sub">Contas cadastradas com status Pendente</div></div>
+    <div class="metric-card"><span class="metric-num">KPI 3</span><div class="metric-title">Capital de Giro Livre</div><div class="metric-value" id="kpiGiroLivre" style="color:var(--gold)">R$ 0,00</div><div class="metric-sub">Saldo Disponível - Compromissos Pendentes</div></div>
+    <div class="metric-card"><span class="metric-num">KPI 4</span><div class="metric-title">Retiradas Pessoais</div><div class="metric-value" id="kpiRetiradasPessoais">R$ 0,00</div><div class="metric-sub">Despesas familiares e retiradas do proprietário</div></div>
+    <div class="metric-card"><span class="metric-num">KPI 5</span><div class="metric-title">Faturamento Bruto</div><div class="metric-value" id="kpiFaturamentoBruto">R$ 0,00</div><div class="metric-sub">Total de receitas recebidas de vendas e entregas</div></div>
+    <div class="metric-card"><span class="metric-num">KPI 6</span><div class="metric-title">Compras de Mercadoria (Estoque)</div><div class="metric-value" id="kpiCmv">R$ 0,00</div><div class="metric-sub">Compras de reposição (CMV contábil não apurado)</div></div>
+    <div class="metric-card"><span class="metric-num">KPI 7</span><div class="metric-title">Despesas Operacionais</div><div class="metric-value" id="kpiDespesasOp">R$ 0,00</div><div class="metric-sub">Custos de operação e contas quitadas</div></div>
+    <div class="metric-card"><span class="metric-num">KPI 8</span><div class="metric-title">Resultado Operacional</div><div class="metric-value" id="kpiResOp" style="color:var(--green)">R$ 0,00</div><div class="metric-sub">Faturamento Bruto - Compras - Despesas Op</div></div>
+    <div class="metric-card"><span class="metric-num">KPI 9</span><div class="metric-title">Resultado Financeiro Mensal</div><div class="metric-value" id="kpiResMes" style="color:var(--gold)">R$ 0,00</div><div class="metric-sub">Resultado Operacional - Retiradas Pessoais</div></div>
+  </div>
+  <div class="card">
+    <h2>Metodologia Rigorosa • Fórmulas e Fontes dos 9 Indicadores (ERP V5)</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;color:var(--muted);font-size:13px;line-height:1.5">
+      <div style="background:rgba(0,0,0,.2);padding:14px;border-radius:12px;border:1px solid var(--line)"><b style="color:var(--gold)">1. Saldo Disponível</b><br>• <b>Fórmula:</b> Faturamento Bruto - Total de Pagamentos Pagos no Caixa.<br>• <b>Fonte:</b> <code>acaiistel_caixa_diario_v1</code>.</div>
+      <div style="background:rgba(0,0,0,.2);padding:14px;border-radius:12px;border:1px solid var(--line)"><b style="color:var(--gold)">2. Compromissos Pendentes</b><br>• Soma das contas com status pendente.<br>• <b>Fonte:</b> <code>acaiistel_central_fin_v5</code>.</div>
+      <div style="background:rgba(0,0,0,.2);padding:14px;border-radius:12px;border:1px solid var(--line)"><b style="color:var(--gold)">3. Capital de Giro Livre</b><br>• Saldo Disponível - Compromissos Pendentes Não Pagos.</div>
+      <div style="background:rgba(0,0,0,.2);padding:14px;border-radius:12px;border:1px solid var(--line)"><b style="color:var(--gold)">4. Retiradas Pessoais</b><br>• Soma de despesas pessoais do Caixa Diário.</div>
+      <div style="background:rgba(0,0,0,.2);padding:14px;border-radius:12px;border:1px solid var(--line)"><b style="color:var(--gold)">5. Faturamento Bruto</b><br>• Soma dos recebimentos de vendas e entregas.</div>
+      <div style="background:rgba(0,0,0,.2);padding:14px;border-radius:12px;border:1px solid var(--line)"><b style="color:var(--gold)">6. Compras de Mercadorias</b><br>• Desembolsos de reposição; CMV contábil exige inventário.</div>
+      <div style="background:rgba(0,0,0,.2);padding:14px;border-radius:12px;border:1px solid var(--line)"><b style="color:var(--gold)">7. Despesas Operacionais</b><br>• Despesas operacionais + contas quitadas.</div>
+      <div style="background:rgba(0,0,0,.2);padding:14px;border-radius:12px;border:1px solid var(--line)"><b style="color:var(--gold)">8. Resultado Operacional</b><br>• Faturamento - Compras - Despesas Operacionais.</div>
+      <div style="background:rgba(0,0,0,.2);padding:14px;border-radius:12px;border:1px solid var(--line)"><b style="color:var(--gold)">9. Resultado Financeiro Mensal</b><br>• Resultado Operacional - Retiradas Pessoais.</div>
+    </div>
+  </div>
+  <div class="section-grid">
+    <div class="card"><h2>Movimentações Recentes do Caixa <span>Histórico Preservado</span></h2><div class="table-wrap"><table><thead><tr><th>Data</th><th class="num">Recebido</th><th class="num">Pago (Total)</th><th class="num">Saldo Dia</th><th class="num">Acumulado</th></tr></thead><tbody id="movimentacoesBody"><tr><td colspan="5" style="text-align:center;color:var(--muted)">Carregando dados...</td></tr></tbody></table></div></div>
+    <div class="card"><h2>Auditoria & Alertas de Caixa <span>Precisão ERP V5</span></h2><div id="alertaGiroBox" style="background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:18px;padding:18px"><div style="font-size:13px;color:var(--muted);text-transform:uppercase;font-weight:700">Status de Capital de Giro</div><div id="alertaGiroText" style="font-size:22px;font-weight:900;margin-top:6px;color:var(--green)">Caixa Saudável</div><div id="alertaGiroDesc" style="font-size:13px;color:var(--muted);margin-top:8px;line-height:1.4">O saldo disponível cobre os compromissos pendentes.</div></div></div>
+  </div>
+</div>
+<div id="tab-contas" class="tab-content"><div class="card">
+  <h2>Contas a Pagar <span>Validação Anti-Duplicidade & Status Individual</span></h2>
+  <div class="form-grid">
+    <div><label>Nome do Compromisso</label><input type="text" id="contaNome" placeholder="Ex: Aluguel da Loja"></div>
+    <div><label>Valor (R$)</label><input type="number" id="contaValor" placeholder="0.00" step="0.01"></div>
+    <div><label>Dia do Vencimento</label><input type="number" id="contaDia" placeholder="10" min="1" max="31"></div>
+    <div><label>Mês de Referência</label><input type="month" id="contaMesRef"></div>
+    <div><label>Categoria</label><select id="contaCat"><option value="operacional">Operacional</option><option value="fixa">Conta Fixa</option><option value="fornecedor">Fornecedor</option></select></div>
+    <div><button class="btn" onclick="adicionarConta()">Cadastrar Conta</button></div>
+  </div>
+  <div class="table-wrap" style="margin-top:20px"><table><thead><tr><th>Vencimento</th><th>Compromisso</th><th>Categoria</th><th>Mês Ref.</th><th class="num">Valor</th><th>Status</th><th>Ações</th></tr></thead><tbody id="contasBody"><tr><td colspan="7" style="text-align:center;color:var(--muted)">Nenhuma conta cadastrada.</td></tr></tbody></table></div>
+</div></div>
+<div id="tab-giro" class="tab-content"><div class="card"><h2>Controle de Capital de Giro Livre <span>Fórmula Exata V5</span></h2><p style="color:var(--muted);margin-bottom:20px"><b>Regra:</b> Capital de Giro Livre = Saldo Disponível - Compromissos Pendentes Não Pagos.</p><div class="dashboard-grid" style="margin-bottom:0"><div class="metric-card"><div class="metric-title">Saldo Disponível em Caixa</div><div class="metric-value" id="giroSaldoDisp">R$ 0,00</div></div><div class="metric-card"><div class="metric-title">Compromissos Pendentes</div><div class="metric-value" id="giroCompPendente" style="color:var(--warn)">R$ 0,00</div></div><div class="metric-card"><div class="metric-title">Capital de Giro Livre</div><div class="metric-value" id="giroLivreExato" style="color:var(--gold)">R$ 0,00</div></div></div></div></div>
+<div id="tab-familiar" class="tab-content"><div class="card"><h2>Painel de Retiradas Pessoais & Família <span>Isolamento Contábil</span></h2><div class="form-grid"><div><label>Limite Familiar de Referência (Semanal)</label><input type="number" id="limiteFamInput" value="200" step="10" onchange="atualizarLimiteFamiliar(this.value)"></div><div><label>Retiradas Registradas no Mês</label><div id="retiradasTotalBox" style="font-size:24px;font-weight:900;color:var(--gold);padding:8px 0">R$ 0,00</div></div></div><p style="color:var(--muted);margin-top:16px;line-height:1.5">As retiradas pessoais são extraídas dos lançamentos da categoria Pessoal do Caixa Diário.</p></div></div>
+<div id="tab-cmv" class="tab-content"><div class="card"><h2>Separação Contábil: Estoque e CMV <span>Transparência Real</span></h2><div style="background:rgba(0,0,0,.25);border-radius:18px;padding:20px;line-height:1.6;color:var(--muted)"><p><b>Compras de Mercadorias:</b> desembolsos de reposição no período.</p><p><b>CMV Real:</b> não apurado contabilmente sem inventário formal de estoque inicial e final.</p></div></div></div>
+<div id="tab-sync" class="tab-content"><div class="card"><h2>Arquitetura e Sincronização Firebase <span>Segurança de Dados</span></h2><div style="background:rgba(0,0,0,.25);border-radius:18px;padding:20px;line-height:1.6;color:var(--muted)"><p><b>Fonte:</b> Caixa Diário em <code>acaiistel_caixa_diario_v1</code> e configurações em <code>acaiistel_central_fin_v5</code>.</p><p><b>Sincronização:</b> pagamentos da Central são registrados como lançamentos identificados no documento diário do Firestore.</p><div style="margin-top:14px"><button class="btn" onclick="testarConexao()">Verificar Integridade Local & Nuvem</button><span id="statusConexao" style="margin-left:14px;font-weight:700;color:var(--green)"></span></div></div></div></div>
+</div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, getDocs, doc, getDoc, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig={apiKey:"AIzaSyBu1hRG2tXqnpZC0aMwADIeHDI4CdOEDCc",authDomain:"raspadinha-atualizada.firebaseapp.com",projectId:"raspadinha-atualizada",storageBucket:"raspadinha-atualizada.firebasestorage.app",messagingSenderId:"287257624054",appId:"1:287257624054:web:79639f835cff59bdb51bd7",measurementId:"G-29CLHSR79B"};
+const app=initializeApp(firebaseConfig),db=getFirestore(app);
+let caixaData={};
+let configData={contasProgramadas:[],limiteFamiliar:200,pagamentosIntegrados:{}};
+
+function br(v){return Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});}
+function hojeLocalISO(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;}
+function mesAtualStr(){return hojeLocalISO().slice(0,7);}
+function salvarConfigLocal(){localStorage.setItem("acaiistel_central_fin_v5",JSON.stringify(configData));}
+function switchTab(tabName){const ordem=["dashboard","contas","giro","familiar","cmv","sync"];document.querySelectorAll(".tab").forEach((el,idx)=>el.classList.toggle("active",ordem[idx]===tabName));document.querySelectorAll(".tab-content").forEach(el=>el.classList.remove("active"));document.getElementById(`tab-${tabName}`)?.classList.add("active");}
+
+function renderContas(){
+ const tbody=document.getElementById("contasBody");if(!tbody)return;
+ const lista=configData.contasProgramadas||[];
+ if(!lista.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted)">Nenhuma conta cadastrada.</td></tr>';return;}
+ tbody.innerHTML=lista.map((c,i)=>{const pago=c.status==="pago";return `<tr><td>Dia ${c.dia||"-"}</td><td>${escapeHtml(c.nome)}</td><td>${escapeHtml(c.categoria||"operacional")}</td><td>${escapeHtml(c.mesRef||mesAtualStr())}</td><td class="num">${br(c.valor)}</td><td><span class="badge ${pago?"ok":"warn"}">${pago?"Pago":"Pendente"}</span></td><td>${pago?`<button class="btn secondary" style="padding:6px 10px;font-size:12px" onclick="alternarStatusConta(${i})">Estornar</button>`:`<button class="btn" style="padding:6px 10px;font-size:12px" onclick="pagarConta(${i})">Marcar Pago</button>`} <button class="btn secondary" style="padding:6px 10px;font-size:12px" onclick="removerConta(${i})">Excluir</button></td></tr>`;}).join("");
+}
+function escapeHtml(v){return String(v??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));}
+
+function adicionarConta(){
+ const nomeEl=document.getElementById("contaNome"),valorEl=document.getElementById("contaValor"),diaEl=document.getElementById("contaDia"),mesEl=document.getElementById("contaMesRef"),catEl=document.getElementById("contaCat");
+ const nome=(nomeEl?.value||"").trim(),valor=parseFloat(valorEl?.value||"0"),dia=parseInt(diaEl?.value||"1",10),mesRef=mesEl?.value||mesAtualStr(),categoria=catEl?.value||"operacional";
+ if(!nome||!(valor>0)){alert("Preencha o nome do compromisso e um valor maior que zero.");return;}
+ if(!Array.isArray(configData.contasProgramadas))configData.contasProgramadas=[];
+ const duplicada=configData.contasProgramadas.some(c=>String(c.nome).toLowerCase()===nome.toLowerCase()&&Number(c.valor)===valor&&(c.mesRef||mesAtualStr())===mesRef);
+ if(duplicada&&!confirm("Já existe uma conta parecida nesse mês. Deseja cadastrar mesmo assim?"))return;
+ configData.contasProgramadas.push({id:`conta_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,nome,valor,dia:isNaN(dia)?1:Math.min(31,Math.max(1,dia)),mesRef,categoria,status:"pendente"});
+ salvarConfigLocal();nomeEl.value="";valorEl.value="";diaEl.value="";renderContas();processarFinanceiro();
+}
+
+async function pagarConta(i){
+ const c=configData.contasProgramadas?.[i];if(!c||c.status!=="pendente")return;
+ const valor=Number(c.valor||0);if(!(valor>0)){alert("Valor da conta inválido.");return;}
+ if(!c.id)c.id=`conta_${Date.now()}_${i}`;
+ const pagamentoId=`central_${c.id}`,hoje=hojeLocalISO(),ref=doc(db,"caixa_fechamentos",hoje);
+ try{
+  const resultado=await runTransaction(db,async tx=>{
+   const snap=await tx.get(ref),existente=snap.exists()?snap.data():{};
+   const contas=Array.isArray(existente.contas)?[...existente.contas]:[];
+   const ids=Array.isArray(existente.pagamentosRegistrados)?[...existente.pagamentosRegistrados]:[];
+   if(ids.includes(pagamentoId)||contas.some(x=>x?.id===pagamentoId))return {duplicado:true,dados:existente};
+   const recebido=Number(existente.totalRecebido??existente.totalVendido??0),estoque=Number(existente.totalEstoque||0),operacional=Number(existente.totalOperacional||0),pessoal=Number(existente.totalPessoal||0),contasTotal=Number(existente.totalContas||0);
+   const novoTotal=contasTotal+valor;
+   contas.push({id:pagamentoId,nome:`Pagamento realizado pela Central Financeira — ${c.nome}`,valor,origemCentral:true,contaId:c.id,dataPagamento:hoje});
+   ids.push(pagamentoId);
+   const atualizado={...existente,data:hoje,contas,totalContas:novoTotal,saldoDia:recebido-estoque-operacional-pessoal-novoTotal,pagamentosRegistrados:ids};
+   tx.set(ref,atualizado,{merge:true});return {duplicado:false,dados:atualizado};
+  });
+  if(resultado.duplicado){
+   c.status="pago";c.dataPagamento=hoje;c.pagamentoId=pagamentoId;salvarConfigLocal();renderContas();processarFinanceiro();
+   alert("Este pagamento já estava registrado. Nenhum novo desconto foi realizado.");return;
+  }
+  caixaData[hoje]=resultado.dados;localStorage.setItem("acaiistel_caixa_diario_v1",JSON.stringify(caixaData));
+  c.status="pago";c.dataPagamento=hoje;c.pagamentoId=pagamentoId;
+  configData.pagamentosIntegrados={...(configData.pagamentosIntegrados||{}),[pagamentoId]:{contaId:c.id,nome:c.nome,valor,data:hoje}};
+  salvarConfigLocal();renderContas();processarFinanceiro();
+  alert(`Pagamento de ${br(valor)} registrado no Caixa Diário e na Central Financeira.`);
+ }catch(e){console.error("Erro ao registrar pagamento:",e);alert("Não foi possível registrar o pagamento: "+e.message);}
+}
+
+async function alternarStatusConta(i){
+ const c=configData.contasProgramadas?.[i];if(!c||c.status!=="pago")return;
+ if(!confirm("Confirma o estorno? O lançamento será removido do Caixa Diário e o valor devolvido ao saldo."))return;
+ const pagamentoId=c.pagamentoId||`central_${c.id}`,data=c.dataPagamento;if(!data){alert("Data do pagamento não localizada. Conta não alterada.");return;}
+ const ref=doc(db,"caixa_fechamentos",data);
+ try{
+  const atualizado=await runTransaction(db,async tx=>{
+   const snap=await tx.get(ref);if(!snap.exists())throw new Error("Registro do pagamento não encontrado no Caixa Diário.");
+   const dados=snap.data(),contas=Array.isArray(dados.contas)?dados.contas:[],removidos=contas.filter(x=>x?.id===pagamentoId);
+   if(!removidos.length)throw new Error("Lançamento original não encontrado. Nenhum estorno foi feito.");
+   const valorEstornado=removidos.reduce((s,x)=>s+Number(x.valor||0),0),novasContas=contas.filter(x=>x?.id!==pagamentoId);
+   const ids=(dados.pagamentosRegistrados||[]).filter(id=>id!==pagamentoId),novoTotal=Math.max(0,Number(dados.totalContas||0)-valorEstornado);
+   const recebido=Number(dados.totalRecebido??dados.totalVendido??0);
+   const novo={...dados,contas:novasContas,pagamentosRegistrados:ids,totalContas:novoTotal,saldoDia:recebido-Number(dados.totalEstoque||0)-Number(dados.totalOperacional||0)-Number(dados.totalPessoal||0)-novoTotal};
+   tx.set(ref,novo,{merge:true});return novo;
+  });
+  caixaData[data]=atualizado;localStorage.setItem("acaiistel_caixa_diario_v1",JSON.stringify(caixaData));
+  c.status="pendente";delete c.dataPagamento;delete c.pagamentoId;if(configData.pagamentosIntegrados)delete configData.pagamentosIntegrados[pagamentoId];
+  salvarConfigLocal();renderContas();processarFinanceiro();alert("Estorno realizado e saldo do Caixa Diário atualizado.");
+ }catch(e){console.error("Erro no estorno:",e);alert("Estorno não realizado: "+e.message);}
+}
+
+function removerConta(i){
+ const c=configData.contasProgramadas?.[i];if(!c)return;
+ if(c.status==="pago"){alert("Esta conta já foi paga. Faça o estorno antes de excluí-la.");return;}
+ if(!confirm(`Deseja excluir a conta "${c.nome}"?`))return;
+ configData.contasProgramadas.splice(i,1);salvarConfigLocal();renderContas();processarFinanceiro();
+}
+function atualizarLimiteFamiliar(v){const n=parseFloat(v);configData.limiteFamiliar=Number.isNaN(n)||n<0?0:n;salvarConfigLocal();processarFinanceiro();}
+
+async function testarConexao(){
+ const el=document.getElementById("statusConexao");if(el){el.style.color="var(--warn)";el.textContent="Verificando armazenamento local e Firestore...";}
+ try{
+  const snap=await getDocs(collection(db,"caixa_fechamentos")),cloud={};snap.forEach(d=>cloud[d.id]=d.data());
+  caixaData={...cloud,...caixaData};localStorage.setItem("acaiistel_caixa_diario_v1",JSON.stringify(caixaData));processarFinanceiro();
+  if(el){el.style.color="var(--green)";el.textContent=`Nuvem verificada (${snap.size} registro(s)) • Local com ${Object.keys(caixaData).length} registro(s).`;}
+ }catch(e){console.error(e);if(el){el.style.color="var(--warn)";el.textContent="Sem acesso à nuvem. Dados locais preservados.";}}
+}
+
+function normalizarData(d,item){
+ if(item?.data){const p=String(item.data).split(/[-/]/);if(p.length===3){if(p[0].length===4)return `${p[0]}-${p[1]}-${p[2]}`;if(p[2].length===4)return `${p[2]}-${p[1]}-${p[0]}`;}}
+ if(/^\d{4}-\d{2}-\d{2}$/.test(d))return d;const p=String(d).split("/");if(p.length===3&&p[2].length===4)return `${p[2]}-${p[1]}-${p[0]}`;return d;
+}
+function mapearDadosFinanceiros(item){
+ const soma=a=>Array.isArray(a)?a.reduce((s,x)=>s+Number(x?.valor||0),0):0;
+ return {totalRecebido:Number(item.totalRecebido??item.totalVendido??0),totalEstoque:Number(item.totalEstoque??soma(item.estoqueCompras)),totalOperacional:Number(item.totalOperacional??soma(item.despesasOperacionais??item.despesas)),totalPessoal:Number(item.totalPessoal??soma(item.despesasPessoais)),totalContas:Number(item.totalContas??soma(item.contas)),saldoDia:item.saldoDia};
+}
+function processarFinanceiro(){
+ const mes=mesAtualStr(),datas=Object.keys(caixaData||{}).filter(d=>normalizarData(d,caixaData[d]).startsWith(mes)).sort();
+ let recebido=0,estoque=0,op=0,pessoal=0,contas=0,acumulado=0,html="";
+ datas.forEach(d=>{
+  const item=caixaData[d]||{},v=mapearDadosFinanceiros(item),pago=v.totalEstoque+v.totalOperacional+v.totalPessoal+v.totalContas,saldo=v.saldoDia!==undefined?Number(v.saldoDia):v.totalRecebido-pago;
+  recebido+=v.totalRecebido;estoque+=v.totalEstoque;op+=v.totalOperacional;pessoal+=v.totalPessoal;contas+=v.totalContas;acumulado+=saldo;
+  html+=`<tr><td>${normalizarData(d,item).split("-").reverse().join("/")}</td><td class="num">${br(v.totalRecebido)}</td><td class="num">${br(pago)}</td><td class="num" style="color:${saldo>=0?"var(--green)":"var(--red)"}">${br(saldo)}</td><td class="num" style="font-weight:700">${br(acumulado)}</td></tr>`;
+ });
+ document.getElementById("movimentacoesBody").innerHTML=html||`<tr><td colspan="5" style="text-align:center;color:var(--muted)">Nenhum dado encontrado para ${mes}.</td></tr>`;
+ const saldo=recebido-estoque-op-pessoal-contas,pendentes=(configData.contasProgramadas||[]).filter(c=>c.status==="pendente").reduce((s,c)=>s+Number(c.valor||0),0),giro=saldo-pendentes,despesas=op+contas,resOp=recebido-estoque-despesas,resMes=resOp-pessoal;
+ const set=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val;};
+ [["kpiSaldoDisponivel",br(saldo)],["kpiCompromissos",br(pendentes)],["kpiGiroLivre",br(giro)],["kpiRetiradasPessoais",br(pessoal)],["kpiFaturamentoBruto",br(recebido)],["kpiCmv",br(estoque)],["kpiDespesasOp",br(despesas)],["kpiResOp",br(resOp)],["kpiResMes",br(resMes)],["giroSaldoDisp",br(saldo)],["giroCompPendente",br(pendentes)],["giroLivreExato",br(giro)],["retiradasTotalBox",br(pessoal)]].forEach(([id,v])=>set(id,v));
+ const at=document.getElementById("alertaGiroText"),ad=document.getElementById("alertaGiroDesc");if(at&&ad){at.style.color=giro>=0?"var(--green)":"var(--red)";at.textContent=giro>=0?"Caixa Saudável":"Atenção ao Capital de Giro";ad.textContent=giro>=0?"O saldo disponível cobre os compromissos pendentes.":"Os compromissos pendentes superam o saldo disponível atual do mês.";}
+}
+function auditarCentralFinanceira(){
+ const chaves=Object.keys(caixaData||{}),mes=mesAtualStr(),registros=chaves.filter(d=>normalizarData(d,caixaData[d]).startsWith(mes)).sort().map(d=>{const x=caixaData[d]||{},v=mapearDadosFinanceiros(x);return {documento:d,data:normalizarData(d,x),recebido:v.totalRecebido,estoque:v.totalEstoque,operacional:v.totalOperacional,pessoal:v.totalPessoal,contas:v.totalContas,saldoDia:v.saldoDia!==undefined?Number(v.saldoDia):v.totalRecebido-v.totalEstoque-v.totalOperacional-v.totalPessoal-v.totalContas};});
+ console.table(registros);processarFinanceiro();return {mesRef:mes,quantidadeDocumentos:chaves.length,registrosMes:registros};
+}
+async function carregarDados(){
+ try{const raw=localStorage.getItem("acaiistel_central_fin_v5");if(raw)configData={...configData,...JSON.parse(raw)};}catch(e){console.error("Erro ao ler config local:",e);}
+ const mesInput=document.getElementById("contaMesRef");if(mesInput&&!mesInput.value)mesInput.value=mesAtualStr();
+ const lim=document.getElementById("limiteFamInput");if(lim)lim.value=configData.limiteFamiliar??200;
+ try{const raw=localStorage.getItem("acaiistel_caixa_diario_v1");if(raw)caixaData=JSON.parse(raw);}catch(e){console.error("Erro ao ler caixa local:",e);}
+ try{const snap=await getDocs(collection(db,"caixa_fechamentos")),cloud={};snap.forEach(d=>cloud[d.id]=d.data());caixaData={...cloud,...caixaData};localStorage.setItem("acaiistel_caixa_diario_v1",JSON.stringify(caixaData));}catch(e){console.warn("Firestore indisponível; usando dados locais:",e);}
+ renderContas();processarFinanceiro();
+}
+
+window.auditarCentralFinanceira=auditarCentralFinanceira;
+window.switchTab=switchTab;window.adicionarConta=adicionarConta;window.alternarStatusConta=alternarStatusConta;window.removerConta=removerConta;window.atualizarLimiteFamiliar=atualizarLimiteFamiliar;window.testarConexao=testarConexao;window.pagarConta=pagarConta;
+window.addEventListener("DOMContentLoaded",carregarDados);
+window.addEventListener("storage",e=>{
+ if(e.key==="acaiistel_caixa_diario_v1"||e.key==="acaiistel_central_fin_v5"||e.key===null){
+  try{const raw=localStorage.getItem("acaiistel_caixa_diario_v1");if(raw){caixaData=JSON.parse(raw);processarFinanceiro();}}catch(err){console.error("Erro ao sincronizar localStorage:",err);}
+ }
+});
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")carregarDados();});
+</script>
+</body>
+</html>
